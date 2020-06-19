@@ -1,10 +1,10 @@
 package main
 
 import (
-	"VKStock/VKSTOCK/builder"
-	"VKStock/VKSTOCK/collector"
-	"VKStock/VKSTOCK/publisher"
-	"VKStock/VKSTOCK/requester"
+	"vkstock/Vkstock/builder"
+	"vkstock/Vkstock/collector"
+	"vkstock/Vkstock/publisher"
+	"vkstock/Vkstock/requester"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	for _, post := range posts {
 		vkBuilder.Reset()
 		vkBuilder.SetText(post.Text)
-		err := vkBuilder.SetPhotoByFile("/home/skupov/go/src/VKSTOCK/main/Screenshot from 2020-06-10 20-16-45.png", "196300082")
+		err := vkBuilder.SetPhotoByFile("/home/skupov/go/src/Vkstock/main/Screenshot from 2020-06-10 20-16-45.png", "196300082")
 		if err == nil {
 			vkPost := vkBuilder.GetPost()
 			vkPublisher.Post("-196300082", vkPost)
