@@ -1,60 +1,61 @@
 <template>
-  <v-app>
-    <v-app-bar
-      app
-      color="primary"
+  <div id="app">
+    <v-app
+      id="inspire"
       dark
     >
-      <div class="d-flex align-center">
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
-
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
-      </div>
-
-      <v-spacer></v-spacer>
-
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
+      <v-navigation-drawer
+        clipped
+        fixed
+        v-model="drawer"
+        app
       >
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
-    </v-app-bar>
-
-    <v-content>
-      <HelloWorld/>
-    </v-content>
-  </v-app>
+        <v-list dense>
+          <v-list-tile @click="router.push('dashboard')">
+            <v-list-tile-action>
+              <v-icon>dashboard</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Dashboard</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile>
+            <v-list-tile-action>
+              <v-icon>settings</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Settings</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
+      </v-navigation-drawer>
+      <v-toolbar
+        app
+        fixed
+        clipped-left
+      >
+        <v-toolbar-side-icon @click.stop="drawer = !drawer" />
+        <v-toolbar-title>Application</v-toolbar-title>
+      </v-toolbar>
+      <v-content>
+        <router-view />
+      </v-content>
+      <v-footer
+        app
+        fixed
+      >
+        <span>&copy; 2020 Exe01</span>
+      </v-footer>
+    </v-app>
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld';
-
 export default {
-  name: 'App',
-
-  components: {
-    HelloWorld,
+  data() {
+    return {
+      drawer: true,
+    };
   },
-
-  data: () => ({
-    //
-  }),
 };
 </script>
