@@ -27,7 +27,7 @@ module.exports = {
     "import/prefer-default-export": 0,
     "no-unused-expressions": ["error", { allowTernary: true }],
     "no-underscore-dangle": 0,
-    "no-param-reassign": 0,
+    // "no-param-reassign": 0,
     "object-curly-newline": ["error", { ObjectPattern: "never" }],
     "vue/html-closing-bracket-newline": ["error", {
       singleline: "never",

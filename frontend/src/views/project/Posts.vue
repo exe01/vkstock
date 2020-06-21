@@ -15,7 +15,7 @@
       >
         <rendered-post
           :project-name="project.name"
-          :img="'http://localhost:8000/api/images/123'"
+          :img="'http://localhost:8000/api/images/123.jpg'"
           :text="post.text"
         />
       </v-flex>

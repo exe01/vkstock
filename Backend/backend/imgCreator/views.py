@@ -6,9 +6,10 @@ import magic
 
 class ImageView(View):
     def get(self, request, id=None):
+        path = 'images/' + str(id)
         try:
-            with open('images/123.jpg', 'rb') as img:
+            with open(path, 'rb') as img:
                 mime = magic.Magic(mime=True)
-                return HttpResponse(img.read(), content_type=mime.from_file('images/123.jpg'))
+                return HttpResponse(img.read(), content_type=mime.from_file(path))
         except IOError:
             return HttpResponseNotFound()

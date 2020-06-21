@@ -39,13 +39,16 @@
     <v-layout>
       <v-flex>
         <v-tabs-items v-model="tabIndex">
-          <v-tab-item
-            v-for="header in tabHeaders"
-            :key="header"
-          >
+          <v-tab-item>
             <posts
               :project-id="projectId"
             />
+          </v-tab-item>
+          <v-tab-item>
+            <settings />
+          </v-tab-item>
+          <v-tab-item>
+            <statistics />
           </v-tab-item>
         </v-tabs-items>
       </v-flex>
@@ -55,10 +58,14 @@
 
 <script>
 import Posts from './Posts.vue';
+import Settings from './Settings.vue';
+import Statistics from './Statistics.vue';
 
 export default {
   components: {
-    Posts
+    Posts,
+    Settings,
+    Statistics
   },
   data() {
     return {
