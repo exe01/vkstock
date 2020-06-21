@@ -1,24 +1,33 @@
 <template>
-  <v-card>
+  <v-card
+    width="500px"
+  >
     <v-card-title>
-      <span>Some cool text from comments or else</span>
+      <div>
+        <p class="headline">
+          {{ projectName }}
+        </p>
+        <p class="mb-0">
+          {{ text }}
+        </p>
+      </div>
     </v-card-title>
 
     <v-img
-      src="https://cdn.vuetifyjs.com/images/cards/desert.jpg"
-      aspect-ratio="2.75"
+      v-if="img"
+      :src="img"
     />
 
     <v-card-actions>
       <v-btn
         flat
-        color="#d9ebe9"
+        color="#98ee99"
       >
         Accept
       </v-btn>
       <v-btn
         flat
-        color="#d9ebe9"
+        color="#ff867c"
       >
         Discard
       </v-btn>
@@ -34,6 +43,11 @@
 
 <script>
 export default {
+  props: {
+    projectName: String,
+    text: String,
+    img: String
+  },
   data() {
     return {
     };

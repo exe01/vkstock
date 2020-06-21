@@ -16,7 +16,8 @@
     "webpack": "^4.43.0",
     "roboto-fontface": "*",
     "font-awesome": "^4.7.0",
-    "material-design-icons-iconfont": "^5.0.1"
+    "material-design-icons-iconfont": "^5.0.1",
+    "axios": "^0.19.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.4.0",

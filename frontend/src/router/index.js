@@ -14,7 +14,7 @@ const routes = [
     path: '/projects/:id',
     name: 'projects',
     component: () => import('@/views/project/Project'),
-    props: true
+    // props: true
   },
   {
     path: '*',

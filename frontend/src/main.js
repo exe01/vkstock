@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import App from './App.vue';
@@ -10,6 +11,10 @@ import 'material-design-icons-iconfont/dist/material-design-icons.css';
 import 'vuetify/dist/vuetify.min.css'; // Ensure you are using css-loader
 
 Vue.config.productionTip = false;
+
+axios.defaults.baseURL = 'http://localhost:8000/';
+
+Vue.prototype.$axios = axios;
 
 Vue.use(Vuetify);
 

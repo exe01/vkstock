@@ -43,7 +43,9 @@
             v-for="header in tabHeaders"
             :key="header"
           >
-            <posts />
+            <posts
+              :project-id="projectId"
+            />
           </v-tab-item>
         </v-tabs-items>
       </v-flex>
@@ -60,6 +62,7 @@ export default {
   },
   data() {
     return {
+      projectId: null,
       project: {},
       tabIndex: null,
       tabHeaders: [
@@ -68,16 +71,19 @@ export default {
     };
   },
   created() {
-    const projectId = this.$route.params.id;
-    this.project = this.getProjectById(projectId);
+    // eslint-disable-next-line radix
+    this.projectId = parseInt(this.$route.params.id);
+    this.setProject(this.projectId);
   },
   methods: {
-    getProjectById(id) {
-      return {
-        name: 'Project name',
-        id
-      };
-    }
+    async setProject(projectId) {
+      this.project = await this.getProjectById(projectId);
+    },
+    async getProjectById(projectId) {
+      const resp = await this.$axios.get(`api/1.0/projects/${projectId}`);
+      const project = resp.data;
+      return project;
+    },
   }
 };
 </script>

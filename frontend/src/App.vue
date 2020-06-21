@@ -79,7 +79,7 @@
 
       <!-- Main content -->
       <v-content>
-        <router-view />
+        <router-view :key="$route.fullPath" />
       </v-content>
 
       <!-- Footer -->
@@ -102,27 +102,19 @@ export default {
     };
   },
   created() {
-    this.projects = this.getProjects();
+    this.setProjects();
   },
   methods: {
-    getProjects() {
-      return [
-        {
-          name: 'Project1',
-          id: 1
-        },
-        {
-          name: 'Project2',
-          id: 2
-        },
-        {
-          name: 'Project3',
-          id: 3
-        }
-      ];
+    async setProjects() {
+      this.projects = await this.getProjects();
+    },
+    async getProjects() {
+      const resp = await this.$axios.get('api/1.0/projects');
+      const projects = resp.data.results;
+      return projects;
     },
     goToProjectView(project) {
-      this.$router.push({ name: 'projects', params: { id: project.id } });
+      this.$router.push({ name: 'projects', params: { id: project.id } }).catch(() => {});
     }
   }
 };
