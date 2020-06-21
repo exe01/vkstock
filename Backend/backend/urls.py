@@ -17,20 +17,21 @@ Including another URLconf
 # from django.urls import path
 from django.urls import include, path
 from rest_framework import routers
-from backend.vkstock import views
+from backend.vkstock import views as api_views
+from backend.imgCreator import views as img_views
 
 
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'groups', views.GroupViewSet)
-router.register(r'types', views.TypeViewSet)
-router.register(r'projects', views.ProjectViewSet)
-router.register(r'sources', views.SourceViewSet)
-router.register(r'posts', views.PostViewSet)
-router.register(r'post_images', views.PostImageViewSet)
-router.register(r'comments', views.CommentViewSet)
-router.register(r'rendered_posts', views.RenderedPostViewSet)
-router.register(r'rendered_images', views.RenderedImageViewSet)
+router.register(r'users', api_views.UserViewSet)
+router.register(r'groups', api_views.GroupViewSet)
+router.register(r'types', api_views.TypeViewSet)
+router.register(r'projects', api_views.ProjectViewSet)
+router.register(r'sources', api_views.SourceViewSet)
+router.register(r'posts', api_views.PostViewSet)
+router.register(r'post_images', api_views.PostImageViewSet)
+router.register(r'comments', api_views.CommentViewSet)
+router.register(r'rendered_posts', api_views.RenderedPostViewSet)
+router.register(r'rendered_images', api_views.RenderedImageViewSet)
 
 
 # Wire up our API using automatic URL routing.
@@ -38,5 +39,6 @@ router.register(r'rendered_images', views.RenderedImageViewSet)
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/1.0/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path('api/images/<id>', img_views.ImageView.as_view()),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

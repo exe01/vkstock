@@ -12,64 +12,61 @@ from backend.vkstock.models import (
 from rest_framework import serializers
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['url', 'username', 'email', 'groups']
 
 
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
+class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['url', 'name']
 
 
-class TypeSerializer(serializers.HyperlinkedModelSerializer):
+class TypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Type
         fields = '__all__'
 
 
-class ProjectSerializer(serializers.HyperlinkedModelSerializer):
+class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
-        depth = 1
 
 
-class SourceSerializer(serializers.HyperlinkedModelSerializer):
+class SourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Source
         fields = '__all__'
 
 
-class PostSerializer(serializers.HyperlinkedModelSerializer):
+class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
-        depth = 1
 
 
-class PostImageSerializer(serializers.HyperlinkedModelSerializer):
+class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
         fields = '__all__'
 
 
-class CommentSerializer(serializers.HyperlinkedModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
 
 
-class RenderedPostSerializer(serializers.HyperlinkedModelSerializer):
+class RenderedPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = RenderedPost
         fields = '__all__'
-        depth = 1
 
 
-class RenderedImageSerializer(serializers.HyperlinkedModelSerializer):
+class RenderedImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = RenderedImage
         fields = '__all__'
