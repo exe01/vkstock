@@ -42,12 +42,6 @@ class SourceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Post
-        fields = '__all__'
-
-
 class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
@@ -60,13 +54,24 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RenderedPostSerializer(serializers.ModelSerializer):
+class PostSerializer(serializers.ModelSerializer):
+    images = PostImageSerializer(many=True, read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
+
     class Meta:
-        model = RenderedPost
+        model = Post
         fields = '__all__'
 
 
 class RenderedImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = RenderedImage
+        fields = '__all__'
+
+
+class RenderedPostSerializer(serializers.ModelSerializer):
+    images = RenderedImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = RenderedPost
         fields = '__all__'

@@ -4,8 +4,6 @@ from django.db import models
 # CHANGE TYPE OF DELETE RENDERED POST
 
 class Type(models.Model):
-    """Type of platform for getting and posting posts.
-    """
     name = models.CharField(max_length=32)
 
 
@@ -30,12 +28,12 @@ class Post(models.Model):
 
 class PostImage(models.Model):
     path = models.CharField(max_length=512)
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post_id = models.ForeignKey(Post, related_name='images', on_delete=models.CASCADE)
 
 
 class Comment(models.Model):
     user_name = models.CharField(max_length=256)
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post_id = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
 
 
 class RenderedPost(models.Model):
@@ -46,6 +44,7 @@ class RenderedPost(models.Model):
 
 
 class RenderedImage(models.Model):
-    rendered_post_id = models.ForeignKey(RenderedPost, on_delete=models.CASCADE)
+    rendered_post_id = models.ForeignKey(RenderedPost, related_name='images', on_delete=models.CASCADE)
     path = models.CharField(max_length=512)
+
 
