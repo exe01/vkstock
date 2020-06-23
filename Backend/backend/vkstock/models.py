@@ -33,6 +33,7 @@ class PostImage(models.Model):
 
 class Comment(models.Model):
     user_name = models.CharField(max_length=256)
+    text = models.TextField()
     post_id = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
 
 
