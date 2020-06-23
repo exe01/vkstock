@@ -14,9 +14,8 @@
         :key="index"
       >
         <rendered-post
+          :post="post"
           :project-name="project.name"
-          :images="renderImgLinks(post.images)"
-          :text="post.text"
         />
       </v-flex>
     </v-layout>
@@ -64,11 +63,6 @@ export default {
       const renderedPosts = resp.data.results;
       return renderedPosts;
     },
-    renderImgLinks(images) {
-      const { baseURL } = this.$axios.defaults;
-      const imgLinks = images.map((i) => `${baseURL}api/images/${i.path}`);
-      return imgLinks;
-    }
   }
 };
 </script>
