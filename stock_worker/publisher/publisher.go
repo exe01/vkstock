@@ -1,11 +1,11 @@
 package publisher
 
 import (
-	"VKSTOCK/requester"
 	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
+	"vkstock/stock_worker/requester"
 )
 
 type Publisher interface {

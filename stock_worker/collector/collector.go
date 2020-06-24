@@ -1,8 +1,8 @@
 package collector
 
 import (
-	"VKSTOCK/requester"
 	"strconv"
+	"vkstock/stock_worker/requester"
 )
 
 type VKGetWallResponse struct {

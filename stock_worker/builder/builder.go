@@ -1,8 +1,6 @@
 package builder
 
 import (
-	"VKSTOCK/requester"
-	"VKSTOCK/utils"
 	"bytes"
 	"errors"
 	"fmt"
@@ -12,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"vkstock/stock_worker/requester"
+	"vkstock/stock_worker/utils"
 )
 
 type VKWallUploadServer struct {
