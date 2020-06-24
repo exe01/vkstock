@@ -41,8 +41,8 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=256)),
                 ('platform_id', models.CharField(max_length=512)),
                 ('last_record_id', models.CharField(max_length=512)),
-                ('project_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Project')),
-                ('type_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Type')),
+                ('project_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Project')),
+                ('type_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Type')),
             ],
         ),
         migrations.CreateModel(
@@ -51,8 +51,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('platform_id', models.CharField(max_length=512)),
                 ('text', models.TextField()),
-                ('post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Post')),
-                ('project_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Project')),
+                ('post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Post')),
+                ('project_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Project')),
             ],
         ),
         migrations.CreateModel(
@@ -60,33 +60,33 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('path', models.CharField(max_length=512)),
-                ('rendered_post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.RenderedPost')),
+                ('rendered_post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.RenderedPost')),
             ],
         ),
         migrations.AddField(
             model_name='project',
             name='type_id',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Type'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Type'),
         ),
         migrations.CreateModel(
             name='PostImage',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('path', models.CharField(max_length=512)),
-                ('post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Post')),
+                ('post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Post')),
             ],
         ),
         migrations.AddField(
             model_name='post',
             name='source_id',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Source'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Source'),
         ),
         migrations.CreateModel(
             name='Comment',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('user_name', models.CharField(max_length=256)),
-                ('post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vkstock.Post')),
+                ('post_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='stock_api.Post')),
             ],
         ),
     ]

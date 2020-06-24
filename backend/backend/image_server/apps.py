@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class ImgcreatorConfig(AppConfig):
-    name = 'backend.imgCreator'
+    name = 'backend.image_server'

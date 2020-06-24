@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
-    'backend.vkstock.apps.VkstockConfig',
-    'backend.imgCreator.apps.ImgcreatorConfig'
+    'backend.stock_api.apps.VkstockConfig',
+    'backend.image_server.apps.ImgcreatorConfig'
 ]
 
 MIDDLEWARE = [

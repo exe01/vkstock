@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from backend.vkstock.models import (
+from backend.stock_api.models import (
     Type,
     Project,
     Source,

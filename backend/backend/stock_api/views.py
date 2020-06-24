@@ -1,6 +1,5 @@
-from rest_framework import viewsets
 from django.contrib.auth.models import User, Group
-from backend.vkstock.models import (
+from backend.stock_api.models import (
     Type,
     Project,
     Source,
@@ -10,7 +9,7 @@ from backend.vkstock.models import (
     RenderedPost,
     RenderedImage,
 )
-from backend.vkstock.serializers import (
+from backend.stock_api.serializers import (
     UserSerializer,
     GroupSerializer,
     TypeSerializer,
@@ -23,7 +22,10 @@ from backend.vkstock.serializers import (
     RenderedImageSerializer,
 )
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -88,3 +90,76 @@ class RenderedImageViewSet(viewsets.ModelViewSet):
     serializer_class = RenderedImageSerializer
     filter_backends = [DjangoFilterBackend]
 
+
+class NullPostId(Exception):
+    pass
+
+
+class RenderPost(APIView):
+    """
+    Render new post from original post.
+    """
+    def post(self, request, format=None):
+        try:
+            post_config = self._parse_config(request.data)
+            rendered_post = self._create_post(post_config)
+            # id = self._save_rendered_post(rendered_post)
+
+            response = Response({
+                'rendered_post_id': rendered_post.id
+            })
+
+            return response
+        except NullPostId:
+            response = Response({
+                'exception': 'Id of post is null'
+            }, 400)
+
+            return response
+
+    def _parse_config(self, data):
+        """Parse client data to post config for building of post.
+
+        Post config:
+
+        =================== ===========================
+        Key                 Description
+        =================== ===========================
+        original_post_id    Id of original post
+        =================== ===========================
+
+        :param data: config
+        :type data: Request
+        :return: Post config
+        """
+        post_config = {}
+
+        original_post_id = data.get('original_post_id')
+        if original_post_id is None:
+            raise NullPostId()
+
+        post_config['original_post_id'] = original_post_id
+
+        return post_config
+
+    def _create_post(self, post_config):
+        """Create a new post. Take info from post config
+
+        :param post_config: Configuration for building of post
+        :return: Rendered post
+        """
+        original_post = Post.objects.get(id=post_config['original_post_id'])
+        comments = original_post.comments.all()
+        project = original_post.source_id.project_id
+
+        rendered_post = RenderedPost(
+            post_id=original_post,
+            project_id=project,
+            text=comments[0].text,
+        )
+
+        rendered_post.save()
+        rendered_post.images.create(path='123.jpg')
+        rendered_post.save()
+
+        return rendered_post
