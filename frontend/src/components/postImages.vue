@@ -7,7 +7,7 @@
     />
 
     <v-carousel
-      v-else
+      v-else-if="links.length > 1"
       :max="width"
       :cycle="false"
     >

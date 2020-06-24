@@ -26,9 +26,11 @@
     <v-dialog
       v-if="settingDialog"
       v-model="settingDialog"
-      max-width="500px"
+      max-width="600px"
     >
-      <v-card>
+      <v-card
+        class="px-3"
+      >
         <v-card-title>
           <div>
             <p class="headline">{{ projectName }}</p>
@@ -43,12 +45,16 @@
         />
 
         <v-card-text>
+          <v-divider class="mb-3" />
+
           <p>{{ originalPost.text }}</p>
 
           <post-images
             :links="renderImgLinks(originalPost.images || [])"
             width="300"
           />
+
+          <v-divider class="mt-3" />
 
           <v-checkbox
             v-for="(comment, i) in originalPost.comments"
