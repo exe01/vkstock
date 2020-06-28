@@ -22,10 +22,13 @@ from backend.stock_api.serializers import (
     RenderedImageSerializer,
 )
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
+from backend.stock_api.image_builder import ImageBuilder
+from pathlib import Path
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -63,7 +66,9 @@ class SourceViewSet(viewsets.ModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['source_id']
+    ordering_fields = ['date']
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
 
 
 class PostImageViewSet(viewsets.ModelViewSet):
@@ -81,7 +86,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class RenderedPostViewSet(viewsets.ModelViewSet):
     queryset = RenderedPost.objects.all()
     serializer_class = RenderedPostSerializer
-    filterset_fields = ['project_id', ]
+    filterset_fields = ['project_id']
     filter_backends = [DjangoFilterBackend]
 
 
@@ -96,6 +101,8 @@ class NullPostId(Exception):
 
 
 class RenderPost(APIView):
+    image_builder = ImageBuilder()
+
     """
     Render new post from original post.
     """
@@ -152,6 +159,11 @@ class RenderPost(APIView):
         comments = original_post.comments.all()
         project = original_post.source_id.project_id
 
+        read_path = str(Path("images").absolute()) + '/123.jpg'
+        # read_path = 'images/123.jpg'
+
+        img_name = self.image_builder.build(read_path, original_post.text)
+
         rendered_post = RenderedPost(
             post_id=original_post,
             project_id=project,
@@ -159,30 +171,7 @@ class RenderPost(APIView):
         )
 
         rendered_post.save()
-        rendered_post.images.create(path='123.jpg')
+        rendered_post.images.create(path=img_name)
         rendered_post.save()
 
         return rendered_post
-
-# from PIL import Image, ImageDraw, ImageFont
-#
-# im = Image.open('images/download.jpeg')
-#
-# xsize, ysize = im.size
-# offset = 100
-#
-# nim = Image.new('RGB', (xsize, ysize+offset), color="white")
-# nim.paste(im, (0, offset))
-#
-# imdr = ImageDraw.Draw(nim)
-#
-# fnt = ImageFont.truetype("fonts/tahoma.ttf", 40)
-# imdr.text((10, 10), "Helo wrld@", fill=(0, 0, 0), font=fnt)
-#
-# # imdr.
-#
-# nim.show()
-#
-# # rim = im.resize((xsize+100, ysize+100))
-#
-# # rim.show()

@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'backend.stock_api.apps.VkstockConfig',
-    'backend.image_server.apps.ImgcreatorConfig'
 ]
 
 MIDDLEWARE = [
@@ -126,6 +125,11 @@ STATIC_URL = '/static/'
 # Pagination
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'backend.pagination.BackendPagination',
     'PAGE_SIZE': 10,
 }
+
+# Media files
+
+MEDIA_ROOT = '/home/skupov/VKStock/backend/media/'
+MEDIA_URL = '/media/'

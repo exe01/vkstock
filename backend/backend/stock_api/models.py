@@ -16,19 +16,19 @@ class Source(models.Model):
     name = models.CharField(max_length=256)
     platform_id = models.CharField(max_length=512)
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE)
-    last_record_id = models.CharField(max_length=512)
     type_id = models.ForeignKey(Type, on_delete=models.CASCADE)
 
 
 class Post(models.Model):
+    date = models.IntegerField(default=0)
     platform_id = models.CharField(max_length=512)
     source_id = models.ForeignKey(Source, on_delete=models.CASCADE)
     text = models.TextField()
 
 
 class PostImage(models.Model):
-    path = models.CharField(max_length=512)
     post_id = models.ForeignKey(Post, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='post_images')
 
 
 class Comment(models.Model):
@@ -46,6 +46,4 @@ class RenderedPost(models.Model):
 
 class RenderedImage(models.Model):
     rendered_post_id = models.ForeignKey(RenderedPost, related_name='images', on_delete=models.CASCADE)
-    path = models.CharField(max_length=512)
-
-
+    image = models.ImageField(upload_to='rendered_images')
