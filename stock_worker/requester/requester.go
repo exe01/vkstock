@@ -1,9 +1,7 @@
 package requester
 
 import (
-	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -55,18 +53,4 @@ func (r *VKRequester) CreateVKRequest(method, action string, params map[string]s
 	req.URL.RawQuery = query.Encode()
 
 	return req, nil
-}
-
-func (r *VKRequester) ParseResponseBody(resp *http.Response, v interface{}) error {
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(bodyBytes, v)
-	if err != nil {
-		return err
-	}
-
-	return err
 }

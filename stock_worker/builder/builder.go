@@ -113,7 +113,7 @@ func (b *VKPostBuilder) getWallUploadServerURL(groupId string) (string, error) {
 	}
 
 	var vkUploadServer VKWallUploadServer
-	err = b.ParseResponseBody(resp, &vkUploadServer)
+	err = utils.ParseResponseBody(resp, &vkUploadServer)
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +157,7 @@ func (b *VKPostBuilder) loadPhoto(uploadServerURL, path string) (*VKUploadRespon
 	}
 
 	var uploadResponse VKUploadResponse
-	err = b.ParseResponseBody(resp, &uploadResponse)
+	err = utils.ParseResponseBody(resp, &uploadResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (b *VKPostBuilder) saveWallPhoto(groupId string, uploadResponse *VKUploadRe
 	}
 
 	var vkSaveWallResponse VKSaveWallResponse
-	err = b.ParseResponseBody(resp, &vkSaveWallResponse)
+	err = utils.ParseResponseBody(resp, &vkSaveWallResponse)
 	if err != nil {
 		return nil, err
 	}
