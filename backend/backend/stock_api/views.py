@@ -28,7 +28,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
 from backend.stock_api.image_builder import ImageBuilder
+from django.core.files import File
 from pathlib import Path
+from PIL import Image
+import io
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -157,21 +160,30 @@ class RenderPost(APIView):
         """
         original_post = Post.objects.get(id=post_config['original_post_id'])
         comments = original_post.comments.all()
+        images = original_post.images.all()
         project = original_post.source_id.project_id
 
-        read_path = str(Path("images").absolute()) + '/123.jpg'
-        # read_path = 'images/123.jpg'
+        images[0].image.open()
+        original_img = Image.open(images[0].image)
+        rendered_img = self.image_builder.build(original_img, original_post.text)
 
-        img_name = self.image_builder.build(read_path, original_post.text)
+        img_reader = io.BytesIO()
+        rendered_img.save(img_reader, format=original_img.format)
 
         rendered_post = RenderedPost(
             post_id=original_post,
             project_id=project,
             text=comments[0].text,
         )
+        rendered_post.save()
 
-        rendered_post.save()
-        rendered_post.images.create(path=img_name)
-        rendered_post.save()
+        img_of_rendered_post = RenderedImage(
+            rendered_post_id=rendered_post
+        )
+        img_of_rendered_post.image.save(
+            self.image_builder.get_random_name(format=original_img.format),
+            File(img_reader)
+        )
+        img_of_rendered_post.save()
 
         return rendered_post

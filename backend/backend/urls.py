@@ -18,6 +18,8 @@ Including another URLconf
 from django.urls import include, path
 from rest_framework import routers
 from backend.stock_api import views as api_views
+from django.conf.urls.static import static
+from django.conf import settings
 
 
 router = routers.DefaultRouter()
@@ -40,4 +42,4 @@ urlpatterns = [
     path('api/1.0/render_post', api_views.RenderPost.as_view()),
     path('api/1.0/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
