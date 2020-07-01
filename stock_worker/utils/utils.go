@@ -2,9 +2,12 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -42,3 +45,47 @@ func NowMinusDaysUnix(days int64) int64 {
 	secondsInDays := int64(time.Hour.Seconds() * 24) * days
 	return time.Now().Unix() - secondsInDays
 }
+
+func DownloadImage(url string) (io.ReadCloser, string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return resp.Body, "", err
+	}
+
+	format, err := DefineFormatFromHeader(resp.Header)
+	if err != nil {
+		return resp.Body, "", err
+	}
+
+	return resp.Body, format, nil
+}
+
+func DefineFormatFromHeader(header http.Header) (string, error) {
+	mimeType := header.Get("Content-Type")
+	typeAndFormat := strings.Split(mimeType, "/")
+	if len(typeAndFormat) < 2 {
+		return "", errors.New("format of image is undefined")
+	}
+
+	format := typeAndFormat[1]
+
+	return format, nil
+}
+
+//func DownloadFile(url string) (io.ReadCloser, error) {
+//	resp, err := http.Get(url)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return resp.Body, nil
+//}
+
+//func LoadImage(url string, image io.Reader) (*http.Response, error) {
+//	body := &bytes.Buffer{}
+//	writer := multipart.NewWriter(body)
+//
+//	writer.WriteField()
+//
+//
+//}
