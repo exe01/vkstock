@@ -52,7 +52,7 @@ type Post struct {
 
 type PostImage struct {
 	Model
-	Image string `json:"path"`
+	Image string `json:"image"`
 	PostId int `json:"post_id"`
 }
 
@@ -74,6 +74,6 @@ type RenderedPost struct {
 
 type RenderedImage struct {
 	Model
-	Image string `json:"path"`
+	Image string `json:"image"`
 	RenderedPostId int `json:"rendered_post_id"`
 }
