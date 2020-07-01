@@ -80,58 +80,6 @@ func (api *StockAPI) saveComment(comment models.Comment) (models.Comment, error)
 	return comment, nil
 }
 
-//func (api *StockAPI) DownloadAndSaveImage(image models.PostImage) (models.PostImage, error) {
-//	resp, err := http.Get(image.Image)
-//	if err != nil {
-//		return image, err
-//	}
-//
-//	mimeType := resp.Header.Get("Content-Type")
-//	typeAndFormat := strings.Split(mimeType, "/")
-//	if len(typeAndFormat) < 2 {
-//		return image, errors.New("format of image is undefined")
-//	}
-//	format := typeAndFormat[1]
-//
-//	body := &bytes.Buffer{}
-//	writer := multipart.NewWriter(body)
-//
-//	part, _ := writer.CreateFormFile("image", "randomname." + format)
-//	io.Copy(part, resp.Body)
-//	resp.Body.Close()
-//
-//	err = writer.WriteField("post_id", strconv.Itoa(image.PostId))
-//	if err != nil {
-//		return image, err
-//	}
-//
-//	err = writer.Close()
-//	if err != nil {
-//		return image, err
-//	}
-//
-//	// Load image
-//	imgUrl := api.URL + "/post_images/"
-//	req, err := http.NewRequest("POST", imgUrl, body)
-//	if err != nil {
-//		return image, nil
-//	}
-//	req.Header.Add("Content-Type", writer.FormDataContentType())
-//
-//	resp, err = api.client.Do(req)
-//
-//	if err != nil {
-//		return image, nil
-//	}
-//
-//	err = utils.ParseResponseBody(resp, &image)
-//	if err != nil {
-//		return image, err
-//	}
-//
-//	return image, nil
-//}
-
 func (api *StockAPI) DownloadAndSaveImage(image models.PostImage) (models.PostImage, error) {
 	downloadedImg, format, err := utils.DownloadImage(image.Image)
 	if err != nil {
