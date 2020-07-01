@@ -109,9 +109,11 @@ export default {
       return originalPost;
     },
     renderImgLinks(images) {
-      const { baseURL } = this.$axios.defaults;
-      const imgLinks = images.map((i) => `${baseURL}api/images/${i.path}`);
-      return imgLinks;
+      const links = images.map((i) => i.image);
+      return links;
+      // const { baseURL } = this.$axios.defaults;
+      // const imgLinks = images.map((i) => `${baseURL}api/images/${i.path}`);
+      // return imgLinks;
     }
   }
 };
