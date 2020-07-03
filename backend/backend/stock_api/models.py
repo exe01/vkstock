@@ -33,15 +33,28 @@ class PostImage(models.Model):
 
 class Comment(models.Model):
     user_name = models.CharField(max_length=256)
-    text = models.TextField()
+    text = models.TextField(default='')
+    ref_text = models.TextField(default='')
     post_id = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
 
 
 class RenderedPost(models.Model):
+    STATUS_CHOICES = [
+        ('AC', 'accepted'),
+        ('UN', 'unaccepted'),
+        ('RE', 'rejected'),
+        ('PO', 'posted'),
+    ]
+
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE)
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
     platform_id = models.CharField(max_length=512)
     text = models.TextField()
+    status = models.CharField(
+        max_length=2,
+        choices=STATUS_CHOICES,
+        default='UN'
+    )
 
 
 class RenderedImage(models.Model):

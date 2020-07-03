@@ -89,7 +89,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class RenderedPostViewSet(viewsets.ModelViewSet):
     queryset = RenderedPost.objects.all().order_by('-id')
     serializer_class = RenderedPostSerializer
-    filterset_fields = ['project_id']
+    filterset_fields = ['project_id', 'status']
     filter_backends = [DjangoFilterBackend]
 
 
