@@ -63,6 +63,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class SourceViewSet(viewsets.ModelViewSet):
     queryset = Source.objects.all()
     serializer_class = SourceSerializer
+    filterset_fields = ['project_id']
     filter_backends = [DjangoFilterBackend]
 
 
