@@ -45,7 +45,9 @@
             />
           </v-tab-item>
           <v-tab-item>
-            <settings />
+            <settings
+              :project-id="projectId"
+            />
           </v-tab-item>
           <v-tab-item>
             <statistics />
