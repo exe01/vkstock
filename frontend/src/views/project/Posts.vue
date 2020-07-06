@@ -25,6 +25,11 @@
                 />
               </v-flex>
             </v-layout>
+            <v-layout>
+              <v-flex>
+                <v-btn block color="#43C1DF" @click="setNewPage(1)">Get posts</v-btn>
+              </v-flex>
+            </v-layout>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -34,8 +39,9 @@
       <v-flex>
         <div class="text-xs-center">
           <v-pagination
-            v-model="currentPage"
+            @input="setNewPage"
             :length="totalPages"
+            :value="currentPage"
 
             color="#43C1DF"
           />
@@ -64,8 +70,10 @@
       <v-flex>
         <div class="text-xs-center">
           <v-pagination
-            v-model="currentPage"
+            @input="setNewPage"
             :length="totalPages"
+            :value="currentPage"
+
             color="#43C1DF"
           />
         </div>
@@ -102,44 +110,43 @@ export default {
     };
   },
   created() {
-    this.setProject(this.projectId)
+    this.setProject()
       .then(() => { this.setRenderedPosts(); });
   },
-  watch: {
-    currentPage() {
+  methods: {
+    setNewPage(page) {
+      this.currentPage = page;
       this.setRenderedPosts();
     },
-    status() {
-      this.setRenderedPosts();
-    }
-  },
-  methods: {
-    async setProject(projectId) {
-      this.project = await this.getProjectById(projectId);
+    async setProject() {
+      this.project = await this.getProjectById(this.projectId);
     },
     async setRenderedPosts() {
-      const { projectId, status } = this;
+      const { projectId, status, currentPage } = this;
 
-      this.renderedPosts = await this.getRenderedPosts(projectId, status.value);
+      const [renderedPosts, totalPages] = await this.getRenderedPosts(projectId, currentPage, status.value);
+
+      this.renderedPosts = renderedPosts;
+      this.totalPages = totalPages;
     },
     async getProjectById(projectId) {
       const resp = await this.$axios.get(`api/1.0/projects/${projectId}`);
       const project = resp.data;
       return project;
     },
-    async getRenderedPosts(projectId, status) {
+    async getRenderedPosts(projectId, page, status) {
       const resp = await this.$axios.get('api/1.0/rendered_posts', {
         params: {
           project_id: projectId,
-          page: this.currentPage,
+          page,
           status,
         },
       });
 
-      this.totalPages = resp.data.meta.all_pages;
-
+      const totalPages = resp.data.meta.all_pages;
       const renderedPosts = resp.data.results;
-      return renderedPosts;
+
+      return [renderedPosts, totalPages];
     },
   }
 };
