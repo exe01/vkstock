@@ -14,7 +14,11 @@ const routes = [
     path: '/projects/:id',
     name: 'projects',
     component: () => import('@/views/project/Project'),
-    // props: true
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('@/views/Settings'),
   },
   {
     path: '*',
