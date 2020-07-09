@@ -7,6 +7,9 @@ import textwrap
 
 class ImageBuilder:
     def build(self, original_img, text):
+        if len(text) == 0:
+            return original_img
+
         # 40 points ~ 22px of width by 1 symbol
         font = ImageFont.truetype("fonts/anonymouspro.ttf", 40)
 
