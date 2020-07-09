@@ -35,7 +35,10 @@
       </v-flex>
     </v-layout>
 
-    <v-layout justify-center>
+    <v-layout
+      v-if="totalPages > 0"
+      justify-center
+    >
       <v-flex>
         <div class="text-xs-center">
           <v-pagination
@@ -66,7 +69,10 @@
       </v-flex>
     </v-layout>
 
-    <v-layout justify-center>
+    <v-layout
+      v-if="totalPages > 0"
+      justify-center
+    >
       <v-flex>
         <div class="text-xs-center">
           <v-pagination
@@ -95,7 +101,7 @@ export default {
   data() {
     return {
       currentPage: 1,
-      totalPages: 1,
+      totalPages: 0,
 
       status: { value: 'UN', name: 'Unaccepted' },
       statuses: [

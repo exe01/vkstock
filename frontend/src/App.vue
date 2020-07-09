@@ -50,6 +50,9 @@
               class="ml-3"
               @click="goToProjectView(project)"
             >
+              <v-list-tile-action>
+                <v-icon />
+              </v-list-tile-action>
               <v-list-tile-content>
                 <v-list-tile-title>{{ project.name }}</v-list-tile-title>
               </v-list-tile-content>
@@ -197,7 +200,7 @@ export default {
     },
 
     async createProject() {
-      const resp = await this.$axios.post('/api/1.0/sources/', this.newProject);
+      const resp = await this.$axios.post('/api/1.0/projects/', this.newProject);
 
       if (resp.status === 201) {
         console.log('Project added');
