@@ -16,14 +16,14 @@ import (
 
 type VKWallUploadServer struct {
 	Response struct {
-		UploadURL string	`json:"upload_url"`
-	}					`json:"response"`
+		UploadURL string `json:"upload_url"`
+	} `json:"response"`
 }
 
 type VKUploadResponse struct {
-	Server      int    `json:"server"`
-	Photo  		string `json:"photo"`
-	Hash        string `json:"hash"`
+	Server int    `json:"server"`
+	Photo  string `json:"photo"`
+	Hash   string `json:"hash"`
 }
 
 type VKSaveWallResponse struct {
@@ -31,12 +31,12 @@ type VKSaveWallResponse struct {
 }
 
 type VKPhoto struct {
-	Id 		int		`json:"id"`
-	AlbumId int		`json:"album_id"`
-	OwnerId int		`json:"owner_id"`
-	UserId 	int		`json:"user_id"`
-	Text 	string	`json:"text"`
-	Date 	int		`json:"date"`
+	Id      int    `json:"id"`
+	AlbumId int    `json:"album_id"`
+	OwnerId int    `json:"owner_id"`
+	UserId  int    `json:"user_id"`
+	Text    string `json:"text"`
+	Date    int    `json:"date"`
 }
 
 type PostBuilder interface {
@@ -60,7 +60,7 @@ func NewVKPostBuilder(vkRequester *requester.VKRequester) *VKPostBuilder {
 	return vkPostBuilder
 }
 
-func (b *VKPostBuilder) Reset () {
+func (b *VKPostBuilder) Reset() {
 	b.post = make(map[string]string)
 }
 
@@ -167,9 +167,9 @@ func (b *VKPostBuilder) loadPhoto(uploadServerURL, path string) (*VKUploadRespon
 
 func (b *VKPostBuilder) saveWallPhoto(groupId string, uploadResponse *VKUploadResponse) (*VKPhoto, error) {
 	params := map[string]string{
-		"server": strconv.Itoa(uploadResponse.Server),
-		"hash": uploadResponse.Hash,
-		"photo": uploadResponse.Photo,
+		"server":   strconv.Itoa(uploadResponse.Server),
+		"hash":     uploadResponse.Hash,
+		"photo":    uploadResponse.Photo,
 		"group_id": groupId,
 	}
 

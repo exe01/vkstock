@@ -5,7 +5,7 @@ import (
 	"vkstock/stock_worker/utils"
 )
 
-func (api *StockAPI) GetSources() ([]models.Source, error)  {
+func (api *StockAPI) GetSources() ([]models.Source, error) {
 	sourceURL := api.URL + "/sources"
 
 	resp, err := api.client.Get(sourceURL)

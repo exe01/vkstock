@@ -5,14 +5,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
+type ModelNotFound struct {
+	When time.Time
+	What string
+}
+
+func (e ModelNotFound) Error() string {
+	return fmt.Sprintf("%v: %v", e.When, e.What)
+}
+
 type StockAPI struct {
-	URL string
+	URL    string
 	client *http.Client
 }
 
-func NewStockAPI (URL string) *StockAPI {
+func NewStockAPI(URL string) *StockAPI {
 	stockAPI := &StockAPI{
 		URL,
 		&http.Client{},
@@ -21,7 +31,7 @@ func NewStockAPI (URL string) *StockAPI {
 	return stockAPI
 }
 
-func (api *StockAPI) SaveModel (modelName string, model interface{}) (*http.Response, error) {
+func (api *StockAPI) SaveModel(modelName string, model interface{}) (*http.Response, error) {
 	modelURL := fmt.Sprintf("%s/%s/", api.URL, modelName)
 
 	modelBytes, err := json.Marshal(model)
@@ -37,7 +47,7 @@ func (api *StockAPI) SaveModel (modelName string, model interface{}) (*http.Resp
 	return resp, nil
 }
 
-func (api *StockAPI) GetModels (modelName string, params map[string]string) (*http.Response, error) {
+func (api *StockAPI) GetModels(modelName string, params map[string]string) (*http.Response, error) {
 	modelURL := fmt.Sprintf("%s/%s/", api.URL, modelName)
 
 	req, err := http.NewRequest("GET", modelURL, nil)
@@ -56,6 +66,17 @@ func (api *StockAPI) GetModels (modelName string, params map[string]string) (*ht
 	req.URL.RawQuery = query.Encode()
 
 	resp, err := api.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (api *StockAPI) GetModelById(modelName string, id string) (*http.Response, error) {
+	modelURL := fmt.Sprintf("%s/%s/%s/", api.URL, modelName, id)
+
+	resp, err := api.client.Get(modelURL)
 	if err != nil {
 		return nil, err
 	}
