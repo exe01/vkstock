@@ -27,6 +27,7 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.renderers import JSONRenderer
 from backend.stock_api.image_builder import ImageBuilder
 from django.core.files import File
 from pathlib import Path
@@ -116,17 +117,14 @@ class RenderPost(APIView):
             rendered_post = self._create_post(post_config)
             # id = self._save_rendered_post(rendered_post)
 
-            response = Response({
-                'rendered_post_id': rendered_post.id
-            })
-
-            return response
+            serializer = RenderedPostSerializer(rendered_post)
+            response = Response(serializer.data)
         except NullPostId:
             response = Response({
                 'exception': 'Id of post is null'
             }, 400)
 
-            return response
+        return response
 
     def _parse_config(self, data):
         """Parse client data to post config for building of post.
@@ -167,7 +165,6 @@ class RenderPost(APIView):
         rendered_post = RenderedPost(
             post_id=original_post,
             project_id=project,
-            # text=comments[0].text,
         )
 
         if len(comments) > 0:
