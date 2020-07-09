@@ -50,12 +50,25 @@
               class="ml-3"
               @click="goToProjectView(project)"
             >
-              <v-list-tile-title>{{ project.name }}</v-list-tile-title>
+              <v-list-tile-content>
+                <v-list-tile-title>{{ project.name }}</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile
+              @click="createNewProjectDialog=true; drawer=false"
+              class="ml-3"
+            >
+              <v-list-tile-action>
+                <v-icon>add_circle</v-icon>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title>Create new project</v-list-tile-title>
+              </v-list-tile-content>
             </v-list-tile>
           </v-list-group>
 
           <v-list-tile
-            @click="$router.push('/settings')"
+            @click="$router.push({ name: 'settings' })"
           >
             <v-list-tile-action>
               <v-icon>settings</v-icon>
@@ -89,6 +102,55 @@
       >
         <span>&copy; 2020 exe01</span>
       </v-footer>
+
+      <v-dialog
+        v-model="createNewProjectDialog"
+        max-width="600px"
+      >
+        <v-card
+          class="px-3"
+        >
+          <v-card-title>
+            <h2>Create new project</h2>
+          </v-card-title>
+
+          <v-card-text>
+            <v-layout>
+              <v-flex xs12>
+                <v-text-field
+                  label="Project name"
+                  v-model="newProject.name"
+                />
+              </v-flex>
+            </v-layout>
+            <v-layout>
+              <v-flex xs12>
+                <v-text-field
+                  label="Token"
+                  v-model="newProject.token"
+                />
+              </v-flex>
+            </v-layout>
+            <v-layout>
+              <v-flex xs12>
+                <v-select
+                  :items="types"
+                  v-model="newProject.type_id"
+
+                  label="Type of project"
+                  item-text="name"
+                  item-value="id"
+                />
+              </v-flex>
+            </v-layout>
+          </v-card-text>
+
+          <v-card-actions>
+            <v-btn flat color="#98ee99" @click="createProject()">Add</v-btn>
+            <v-btn flat color="#ff867c" @click="clearNewProject(); createNewProjectDialog=false">Cancel</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-app>
   </div>
 </template>
@@ -98,11 +160,20 @@ export default {
   data() {
     return {
       drawer: false,
+      createNewProjectDialog: false,
       projects: [],
+
+      types: [],
+      newProject: {
+        name: '',
+        token: '',
+        type_id: ''
+      },
     };
   },
   created() {
     this.setProjects();
+    this.setTypes();
   },
   methods: {
     async setProjects() {
@@ -115,6 +186,32 @@ export default {
     },
     goToProjectView(project) {
       this.$router.push({ name: 'projects', params: { id: project.id } }).catch(() => {});
+    },
+    async setTypes() {
+      this.types = await this.getTypes();
+    },
+    async getTypes() {
+      const resp = await this.$axios.get('/api/1.0/types/');
+      const types = resp.data.results;
+      return types;
+    },
+
+    async createProject() {
+      const resp = await this.$axios.post('/api/1.0/sources/', this.newProject);
+
+      if (resp.status === 201) {
+        console.log('Project added');
+        this.clearNewProject();
+        this.createNewProjectDialog = false;
+        this.setProjects();
+      }
+    },
+    clearNewProject() {
+      this.newProject = {
+        name: '',
+        token: '',
+        type_id: ''
+      };
     }
   }
 };

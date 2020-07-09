@@ -63,11 +63,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class SourceViewSet(viewsets.ModelViewSet):
     queryset = Source.objects.all()
     serializer_class = SourceSerializer
+    filterset_fields = ['project_id']
     filter_backends = [DjangoFilterBackend]
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().order_by('-id')
     serializer_class = PostSerializer
     filterset_fields = ['source_id']
     ordering_fields = ['date']
@@ -87,9 +88,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class RenderedPostViewSet(viewsets.ModelViewSet):
-    queryset = RenderedPost.objects.all()
+    queryset = RenderedPost.objects.all().order_by('-id')
     serializer_class = RenderedPostSerializer
-    filterset_fields = ['project_id']
+    filterset_fields = ['project_id', 'status']
     filter_backends = [DjangoFilterBackend]
 
 
@@ -163,27 +164,34 @@ class RenderPost(APIView):
         images = original_post.images.all()
         project = original_post.source_id.project_id
 
-        images[0].image.open()
-        original_img = Image.open(images[0].image)
-        rendered_img = self.image_builder.build(original_img, original_post.text)
-
-        img_reader = io.BytesIO()
-        rendered_img.save(img_reader, format=original_img.format)
-
         rendered_post = RenderedPost(
             post_id=original_post,
             project_id=project,
-            text=comments[0].text,
+            # text=comments[0].text,
         )
+
+        if len(comments) > 0:
+            rendered_post.text = comments[0].text
+        else:
+            rendered_post.text = original_post.text
+
         rendered_post.save()
 
-        img_of_rendered_post = RenderedImage(
-            rendered_post_id=rendered_post
-        )
-        img_of_rendered_post.image.save(
-            self.image_builder.get_random_name(format=original_img.format),
-            File(img_reader)
-        )
-        img_of_rendered_post.save()
+        if len(images) > 0:
+            images[0].image.open()
+            original_img = Image.open(images[0].image)
+            rendered_img = self.image_builder.build(original_img, original_post.text)
+
+            img_reader = io.BytesIO()
+            rendered_img.save(img_reader, format=original_img.format)
+
+            img_of_rendered_post = RenderedImage(
+                rendered_post_id=rendered_post
+            )
+            img_of_rendered_post.image.save(
+                self.image_builder.get_random_name(format=original_img.format),
+                File(img_reader)
+            )
+            img_of_rendered_post.save()
 
         return rendered_post

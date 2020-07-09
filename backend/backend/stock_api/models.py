@@ -5,24 +5,26 @@ from django.db import models
 
 class Type(models.Model):
     name = models.CharField(max_length=32)
+    token = models.CharField(max_length=256)
 
 
 class Project(models.Model):
     name = models.CharField(max_length=256)
+    token = models.CharField(max_length=256)
     type_id = models.ForeignKey(Type, on_delete=models.CASCADE)
 
 
 class Source(models.Model):
     name = models.CharField(max_length=256)
-    platform_id = models.CharField(max_length=512)
+    platform_id = models.CharField(max_length=256)
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE)
     type_id = models.ForeignKey(Type, on_delete=models.CASCADE)
 
 
 class Post(models.Model):
     date = models.IntegerField(default=0)
-    platform_id = models.CharField(max_length=512)
-    source_id = models.ForeignKey(Source, on_delete=models.CASCADE)
+    platform_id = models.CharField(max_length=256)
+    source_id = models.ForeignKey(Source, null=True, on_delete=models.SET_NULL)
     text = models.TextField()
 
 
@@ -33,15 +35,28 @@ class PostImage(models.Model):
 
 class Comment(models.Model):
     user_name = models.CharField(max_length=256)
-    text = models.TextField()
+    text = models.TextField(default='')
+    ref_text = models.TextField(default='')
     post_id = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
 
 
 class RenderedPost(models.Model):
+    STATUS_CHOICES = [
+        ('AC', 'accepted'),
+        ('UN', 'unaccepted'),
+        ('RE', 'rejected'),
+        ('PO', 'posted'),
+    ]
+
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE)
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
-    platform_id = models.CharField(max_length=512)
+    platform_id = models.CharField(max_length=256)
     text = models.TextField()
+    status = models.CharField(
+        max_length=2,
+        choices=STATUS_CHOICES,
+        default='UN'
+    )
 
 
 class RenderedImage(models.Model):

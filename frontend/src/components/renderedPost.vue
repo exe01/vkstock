@@ -17,10 +17,17 @@
       />
 
       <v-card-actions>
-        <v-btn flat color="#98ee99">Accept</v-btn>
-        <v-btn flat color="#ff867c">Discard</v-btn>
+        <v-btn :flat="post.status!='AC'" color="#98ee99" @click="updateStatus('AC')">Accept</v-btn>
+        <v-btn :flat="post.status!='RE'" color="#ff867c" @click="updateStatus('RE')">Reject</v-btn>
         <v-btn flat color="#43C1DF" @click="openSettingDialog()">Settings</v-btn>
       </v-card-actions>
+
+      <v-divider />
+
+      <div>
+        <span class="grey--text caption ma-2 font-italic">id: {{ post.id }}</span>
+      </div>
+
     </v-card>
 
     <v-dialog
@@ -65,9 +72,8 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-btn flat color="#98ee99">Accept</v-btn>
-          <v-btn flat color="#ff867c">Discard</v-btn>
-          <v-btn flat color="#43C1DF">Settings</v-btn>
+          <v-btn flat color="#98ee99" @click="updateStatus('AC')">Accept</v-btn>
+          <v-btn flat color="#ff867c" @click="updateStatus('RE')">Reject</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -109,9 +115,17 @@ export default {
       return originalPost;
     },
     renderImgLinks(images) {
-      const { baseURL } = this.$axios.defaults;
-      const imgLinks = images.map((i) => `${baseURL}api/images/${i.path}`);
-      return imgLinks;
+      const links = images.map((i) => i.image);
+      return links;
+    },
+    async updateStatus(status) {
+      const { id } = this.post;
+
+      const resp = await this.$axios.patch(`/api/1.0/rendered_posts/${id}/`, {
+        status
+      });
+
+      this.post.status = resp.data.status;
     }
   }
 };
