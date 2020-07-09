@@ -42,7 +42,7 @@ func ParseResponseBody(resp *http.Response, v interface{}) error {
 }
 
 func NowMinusDaysUnix(days int64) int64 {
-	secondsInDays := int64(time.Hour.Seconds() * 24) * days
+	secondsInDays := int64(time.Hour.Seconds()*24) * days
 	return time.Now().Unix() - secondsInDays
 }
 
@@ -71,21 +71,3 @@ func DefineFormatFromHeader(header http.Header) (string, error) {
 
 	return format, nil
 }
-
-//func DownloadFile(url string) (io.ReadCloser, error) {
-//	resp, err := http.Get(url)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return resp.Body, nil
-//}
-
-//func LoadImage(url string, image io.Reader) (*http.Response, error) {
-//	body := &bytes.Buffer{}
-//	writer := multipart.NewWriter(body)
-//
-//	writer.WriteField()
-//
-//
-//}

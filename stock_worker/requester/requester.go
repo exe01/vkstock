@@ -7,7 +7,7 @@ import (
 )
 
 type VKRequester struct {
-	VKURL string
+	VKURL  string
 	Client *http.Client
 
 	accessToken string

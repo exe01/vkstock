@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strconv"
+	"time"
 	"vkstock/stock_worker/models"
 	"vkstock/stock_worker/utils"
 )
@@ -25,9 +26,31 @@ func (api *StockAPI) GetPosts(params map[string]string) ([]models.Post, error) {
 	return setPosts.Results, nil
 }
 
+func (api *StockAPI) GetLastPost(sourceId int) (models.Post, error) {
+	var post models.Post
+	params := map[string]string {
+		"ordering": "-date",
+		"source_id": strconv.Itoa(sourceId),
+		"count": "1",
+	}
+
+	posts, err := api.GetPosts(params)
+	if err != nil {
+		return post, nil
+	}
+	if len(posts) == 0 {
+		return post, ModelNotFound{
+			When: time.Now(),
+			What: "post not found",
+		}
+	}
+
+	return posts[0], nil
+}
+
 func (api *StockAPI) SavePost(post models.Post) (models.Post, error) {
 	comments := post.Comments
-	//images := post.Images
+	images := post.Images
 
 	post.Comments = nil
 	post.Images = nil
@@ -47,46 +70,61 @@ func (api *StockAPI) SavePost(post models.Post) (models.Post, error) {
 		savedComments = append(savedComments, savedComment)
 	}
 
+	savedImages := make([]models.PostImage, 0, len(images))
+	for _, image := range images {
+		image.PostId = savedPost.Id
+		savedImage, err := api.downloadAndSaveImage(image)
+		if err != nil {
+			continue
+		}
+		savedImages = append(savedImages, savedImage)
+	}
+
 	savedPost.Comments = savedComments
+	savedPost.Images = savedImages
 
 	return savedPost, nil
 }
 
 func (api *StockAPI) savePost(post models.Post) (models.Post, error) {
+	var savedPost models.Post
+
 	resp, err := api.SaveModel("posts", post)
 	if err != nil {
 		return post, nil
 	}
 
-	err = utils.ParseResponseBody(resp, &post)
+	err = utils.ParseResponseBody(resp, &savedPost)
 	if err != nil {
 		return post, err
 	}
 
-	return post, nil
+	return savedPost, nil
 }
 
 func (api *StockAPI) saveComment(comment models.Comment) (models.Comment, error) {
+	var savedComment models.Comment
+
 	resp, err := api.SaveModel("comments", comment)
 	if err != nil {
 		return comment, nil
 	}
 
-	err = utils.ParseResponseBody(resp, &comment)
+	err = utils.ParseResponseBody(resp, &savedComment)
 	if err != nil {
 		return comment, err
 	}
 
-	return comment, nil
+	return savedComment, nil
 }
 
-func (api *StockAPI) DownloadAndSaveImage(image models.PostImage) (models.PostImage, error) {
+func (api *StockAPI) downloadAndSaveImage(image models.PostImage) (models.PostImage, error) {
 	downloadedImg, format, err := utils.DownloadImage(image.Image)
 	if err != nil {
 		return image, err
 	}
 
-	body, contType,  err := api.createPostImageBody(downloadedImg, image.PostId, format)
+	body, contType, err := api.createPostImageBody(downloadedImg, image.PostId, format)
 	if err != nil {
 		return image, err
 	}
@@ -103,7 +141,7 @@ func (api *StockAPI) createPostImageBody(image io.Reader, postId int, format str
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	part, err := writer.CreateFormFile("image", "stockApiLoader." + format)
+	part, err := writer.CreateFormFile("image", "stockApiLoader."+format)
 	if err != nil {
 		return nil, "", err
 	}
@@ -150,4 +188,3 @@ func (api *StockAPI) saveImage(body io.Reader, contentType string) (models.PostI
 
 	return image, nil
 }
-
