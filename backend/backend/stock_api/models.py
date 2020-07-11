@@ -26,6 +26,7 @@ class Post(models.Model):
     platform_id = models.CharField(max_length=256)
     source_id = models.ForeignKey(Source, null=True, on_delete=models.SET_NULL)
     text = models.TextField(blank=True)
+    rating = models.IntegerField(default=0)
 
 
 class PostImage(models.Model):
@@ -38,6 +39,8 @@ class Comment(models.Model):
     text = models.TextField(default='', blank=True)
     ref_text = models.TextField(default='', blank=True)
     post_id = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
+    rating = models.IntegerField(default=0)
+    image = models.ImageField(upload_to='comment_images', null=True)
 
 
 class RenderedPost(models.Model):

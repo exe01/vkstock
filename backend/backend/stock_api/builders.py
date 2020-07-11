@@ -6,35 +6,37 @@ import textwrap
 
 
 class ImageBuilder:
-    def build(self, original_img, text, width=800):
+    FONT_POINTS = 40
+    SYMBOL_WIDTH = 22
+
+    def build(self, original_img, text, width=800, text_margin=30, text_location='top', font_name='anonymouspro.ttf'):
         resized_img = self.resize_img_by_width(original_img, width)
 
         if len(text) == 0:
             return resized_img
 
         # 40 points ~ 22px of width by 1 symbol
-        font = ImageFont.truetype("fonts/anonymouspro.ttf", 40)
-
-        # Margin of text block
-        margin = 20
+        font = ImageFont.truetype('fonts/'+font_name, self.FONT_POINTS)
 
         xsize, ysize = resized_img.size
 
-        text_width = xsize - 2*margin
-
-        symbols_per_line = text_width / 22
-
+        text_width = xsize - 2*text_margin
+        symbols_per_line = text_width / self.SYMBOL_WIDTH
         text = self.separate_text_by_lines(text, symbols_per_line)
-
         _, text_height = self.textsize(text, font)
 
-        full_text_block_height = text_height+2*margin
+        full_text_block_height = text_height+2*text_margin
         full_image_height = ysize + full_text_block_height
 
         rendered_img = Image.new('RGB', (xsize, full_image_height), color="white")
-        rendered_img.paste(resized_img, (0, full_text_block_height))
-        img_driwer = ImageDraw.Draw(rendered_img)
-        img_driwer.multiline_text((margin, margin), text, fill=(0, 0, 0), font=font)
+        img_drawer = ImageDraw.Draw(rendered_img)
+
+        if text_location == 'top':
+            rendered_img.paste(resized_img, (0, full_text_block_height))
+            img_drawer.multiline_text((text_margin, text_margin), text, fill=(0, 0, 0), font=font)
+        elif text_location == 'bottom':
+            rendered_img.paste(resized_img, (0, 0))
+            img_drawer.multiline_text((text_margin, text_margin+ysize), text, fill=(0, 0, 0), font=font)
 
         return rendered_img
 
@@ -74,3 +76,33 @@ class ImageBuilder:
             random_name += '.'+format.lower()
 
         return random_name
+
+class TextBuilder:
+    def format_text(self, text, ref_text='', wrapper='*'):
+        text = self.up_first_letter(text)
+        ref_text = self.up_first_letter(ref_text)
+
+        if len(text) == 0 and len(ref_text) == 0:
+            return ''
+
+        if len(text) != 0 and len(ref_text) == 0:
+            return text
+
+        if len(text) == 0 and len(ref_text) != 0:
+            return ref_text
+
+        if len(text) != 0 and len(ref_text) != 0:
+            text = self.wrap_text(text, wrapper)
+            ref_text = self.wrap_text(ref_text, wrapper)
+            return '{}\n\n{}'.format(ref_text, text)
+
+        return ''
+
+    def up_first_letter(self, text=''):
+        if len(text) > 0:
+            return text[0].upper() + text[1:]
+
+        return text
+
+    def wrap_text(self, text, wrapper=''):
+        return '{}{}{}'.format(wrapper, text, wrapper)
