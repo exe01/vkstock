@@ -50,6 +50,7 @@ type Post struct {
 	Images     []PostImage `json:"images"`
 	Comments   []Comment   `json:"comments"`
 	Date       int64       `json:"date"`
+	Rating	   int		   `json:"rating"`
 }
 
 type PostImage struct {
@@ -64,6 +65,17 @@ type Comment struct {
 	Text     string `json:"text"`
 	PostId   int    `json:"post_id"`
 	RefText  string `json:"ref_text"`
+	Rating	 int    `json:"rating"`
+	Image 	 string `json:"image"`
+}
+
+type CommentWithoutImage struct {
+	Model
+	Username string `json:"user_name"`
+	Text     string `json:"text"`
+	PostId   int    `json:"post_id"`
+	RefText  string `json:"ref_text"`
+	Rating	 int    `json:"rating"`
 }
 
 type RenderedPost struct {

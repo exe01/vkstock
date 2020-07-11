@@ -2,6 +2,7 @@ package collector
 
 import (
 	"errors"
+	"log"
 	"regexp"
 	"sort"
 	"strconv"
@@ -58,20 +59,23 @@ type VKPost struct {
 	} `json:"reposts"`
 }
 
-type Attachment struct {
-	Type  string                 `json:"type"`
-	Photo map[string]interface{} `json:"photo"`
-}
-
 type VKComment struct {
 	Id     int    `json:"id"`
 	Text   string `json:"text"`
 	FromId int    `json:"from_id"`
+	ReplyToComment int `json:"reply_to_comment"`
+	ReplyToUser	   int `json:"reply_to_user"`
+	Attachments []Attachment `json:"attachments"`
 	Likes  struct {
 		Count     int `json:"count"`
 		UserLikes int `json:"user_likes"`
 		CanLike   int `json:"can_like"`
 	} `json:"likes"`
+}
+
+type Attachment struct {
+	Type  string                 `json:"type"`
+	Photo map[string]interface{} `json:"photo"`
 }
 
 type ByLike []VKComment
@@ -142,10 +146,29 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 			comments := make([]models.Comment, 0, countOfComments)
 			for _, vkComment := range topVKComments {
 				comment := convertVKComment(vkComment)
+
+				if vkComment.ReplyToComment != 0 {
+					commentToReply, err := c.getVKCommentById(ownerId, vkComment.ReplyToComment)
+					if err != nil {
+						log.Print(err)
+					} else {
+						comment.RefText = commentToReply.Text
+					}
+
+					comment.Text = deleteRefToUserFromText(comment.Text)
+
+					if len(vkComment.Attachments) > 0 {
+						commentImgUrl, err := convertPhotoAttachment(vkComment.Attachments[0])
+						if err == nil {
+							comment.Image = commentImgUrl
+						}
+					}
+				}
+
 				comments = append(comments, comment)
 			}
 
-			images := convertAttachments(vkPost.Attachments)
+			images := convertPostPhotoAttachments(vkPost.Attachments)
 
 			post := convertVKPost(vkPost)
 			post.Comments = comments
@@ -229,6 +252,37 @@ func (c *VKCollector) getAllVKComments(ownerId string, postId int) ([]VKComment,
 	return allComments, nil
 }
 
+func (c *VKCollector) getVKCommentById(ownerId string, commentId int) (VKComment, error) {
+	params := map[string]string{
+		"owner_id": ownerId,
+		"comment_id": strconv.Itoa(commentId),
+	    // Todo upgrade vk verstion to 5.120,
+	    "v": "5.92",
+	}
+
+	req, err := c.CreatePrivilegedVKRequest("GET", "method/wall.getComment", params, nil)
+	if err != nil {
+		return VKComment{}, err
+	}
+
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return VKComment{}, err
+	}
+
+	var vkResponse VKGetCommentsResponse
+	err = utils.ParseResponseBody(resp, &vkResponse)
+	if err != nil {
+		return VKComment{}, err
+	}
+
+	if len(vkResponse.Response.Items) == 0 {
+		return VKComment{}, errors.New("comment is not returned")
+	}
+
+	return vkResponse.Response.Items[0], nil
+}
+
 func (c *VKCollector) getVKPostComments(ownerId string, postId, count, offset int) (*VKGetCommentsResponse, error) {
 	params := map[string]string{
 		"owner_id":   ownerId,
@@ -265,30 +319,44 @@ func convertVKPost(vkPost VKPost) models.Post {
 		Text:       vkPost.Text,
 		Images:     nil,
 		Comments:   nil,
+		Rating:     vkPost.Likes.Count,
 	}
 
 	return post
 }
 
-func convertAttachments(attachments []Attachment) []models.PostImage {
+func convertPostPhotoAttachments(attachments []Attachment) []models.PostImage {
 	images := make([]models.PostImage, 0, len(attachments))
 
 	for _, attach := range attachments {
-		if attach.Type == "photo" {
-			imgURL, err := getUrlOfImageWithMaxResolution(attach.Photo)
-			if err != nil {
-				continue
-			}
-
-			image := models.PostImage{
-				Image: imgURL,
-			}
-
-			images = append(images, image)
+		imageUrl, err := convertPhotoAttachment(attach)
+		if err != nil {
+			continue
 		}
+
+		image := models.PostImage{
+			Image: imageUrl,
+		}
+
+		images = append(images, image)
 	}
 
 	return images
+}
+
+func convertPhotoAttachment(attachment Attachment) (string, error) {
+	if attachment.Type == "photo" {
+		var imageUrl string
+
+		imageUrl, err := getUrlOfImageWithMaxResolution(attachment.Photo)
+		if err != nil {
+			return "", err
+		}
+
+		return imageUrl, nil
+	}
+
+	return "", errors.New("attachment is not photo")
 }
 
 func getUrlOfImageWithMaxResolution(vkPhoto map[string]interface{}) (string, error) {
@@ -319,7 +387,18 @@ func convertVKComment(vkComment VKComment) models.Comment {
 		Username: strconv.Itoa(vkComment.FromId),
 		Text:     vkComment.Text,
 		PostId:   0,
+		Rating:   vkComment.Likes.Count,
 	}
 
 	return comment
+}
+
+func deleteRefToUserFromText(text string) string {
+	re, err := regexp.Compile(`\[id\d+\|[а-яА-Яa-zA-Z0-9]+], `)
+	if err != nil {
+		return text
+	}
+
+	textWithoutReferences := re.ReplaceAllString(text, "")
+	return textWithoutReferences
 }
