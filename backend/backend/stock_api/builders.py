@@ -6,9 +6,11 @@ import textwrap
 
 
 class ImageBuilder:
-    def build(self, original_img, text):
+    def build(self, original_img, text, width=800):
+        resized_img = self.resize_img_by_width(original_img, width)
+
         if len(text) == 0:
-            return original_img
+            return resized_img
 
         # 40 points ~ 22px of width by 1 symbol
         font = ImageFont.truetype("fonts/anonymouspro.ttf", 40)
@@ -16,7 +18,7 @@ class ImageBuilder:
         # Margin of text block
         margin = 20
 
-        xsize, ysize = original_img.size
+        xsize, ysize = resized_img.size
 
         text_width = xsize - 2*margin
 
@@ -30,36 +32,18 @@ class ImageBuilder:
         full_image_height = ysize + full_text_block_height
 
         rendered_img = Image.new('RGB', (xsize, full_image_height), color="white")
-        rendered_img.paste(original_img, (0, full_text_block_height))
+        rendered_img.paste(resized_img, (0, full_text_block_height))
         img_driwer = ImageDraw.Draw(rendered_img)
         img_driwer.multiline_text((margin, margin), text, fill=(0, 0, 0), font=font)
 
         return rendered_img
 
-    # def build(self, original_img, text):
-    #     lines = textwrap.wrap(text, width=40)
-    #     text = '\n'.join(lines)
-    #
-    #     font = ImageFont.truetype("fonts/tahoma.ttf", 40)
-    #     test_img = Image.new('RGB', (10, 10), color="white")
-    #     test_img_driwer = ImageDraw.Draw(test_img)
-    #     max_width, max_height = test_img_driwer.multiline_textsize(text, font=font)
-    #
-    #     xsize, ysize = original_img.size
-    #
-    #     if max_width > xsize:
-    #         xsize = max_width
-    #
-    #     offset = max_height + 40
-    #
-    #     img_with_white_box = Image.new('RGB', (xsize, ysize+offset), color="white")
-    #     img_with_white_box.paste(original_img, (0, offset))
-    #
-    #     img_driwer = ImageDraw.Draw(img_with_white_box)
-    #
-    #     img_driwer.multiline_text((10, 10), text, fill=(0, 0, 0), font=font, align='left')
-    #
-    #     return img_with_white_box
+    def resize_img_by_width(self, img, width: int):
+        orig_width, orig_height = img.size
+        scale_factor = orig_width / width
+        height = int(orig_height / scale_factor)
+        resized_img = img.resize((width, height))
+        return resized_img
 
     def textsize(self, text, font):
         """
