@@ -44,6 +44,21 @@
       </v-flex>
     </v-layout>
 
+    <v-layout
+      class="mt-4"
+    >
+      <v-flex>
+        <v-card>
+          <v-card-title>
+            <h2>Token</h2>
+          </v-card-title>
+          <v-card-text>
+            {{ project.token }}
+          </v-card-text>
+        </v-card>
+      </v-flex>
+    </v-layout>
+
     <!-- Create source form -->
     <v-dialog
       v-model="addSourceDialog"
@@ -104,6 +119,7 @@ export default {
   data() {
     return {
       sources: [],
+      totalSources: 0,
       sourcePagination: {},
       newSource: {
         name: '',

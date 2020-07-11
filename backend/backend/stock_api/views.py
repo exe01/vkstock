@@ -21,15 +21,15 @@ from backend.stock_api.serializers import (
     RenderedPostSerializer,
     RenderedImageSerializer,
 )
+from backend.stock_api.constants import *
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
-from backend.stock_api.image_builder import ImageBuilder
+from backend.stock_api.builders import ImageBuilder, TextBuilder
 from django.core.files import File
-from pathlib import Path
 from PIL import Image
 import io
 
@@ -71,7 +71,7 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-id')
     serializer_class = PostSerializer
     filterset_fields = ['source_id']
-    ordering_fields = ['date']
+    ordering_fields = ['date', 'rating']
     filter_backends = [DjangoFilterBackend, OrderingFilter]
 
 
@@ -104,8 +104,13 @@ class NullPostId(Exception):
     pass
 
 
+class PostTypeIsNotDefined(Exception):
+    pass
+
+
 class RenderPost(APIView):
     image_builder = ImageBuilder()
+    text_builder = TextBuilder()
 
     """
     Render new post from original post.
@@ -116,17 +121,14 @@ class RenderPost(APIView):
             rendered_post = self._create_post(post_config)
             # id = self._save_rendered_post(rendered_post)
 
-            response = Response({
-                'rendered_post_id': rendered_post.id
-            })
-
-            return response
+            serializer = RenderedPostSerializer(rendered_post)
+            response = Response(serializer.data)
         except NullPostId:
             response = Response({
                 'exception': 'Id of post is null'
             }, 400)
 
-            return response
+        return response
 
     def _parse_config(self, data):
         """Parse client data to post config for building of post.
@@ -137,6 +139,9 @@ class RenderPost(APIView):
         Key                 Description
         =================== ===========================
         original_post_id    Id of original post
+        rendered_post_id    Id of rendered post
+        replace             Replace rendered post
+        as_original         Render as original
         =================== ===========================
 
         :param data: config
@@ -145,11 +150,41 @@ class RenderPost(APIView):
         """
         post_config = {}
 
-        original_post_id = data.get('original_post_id')
-        if original_post_id is None:
+        original_post_id = data.get(ORIGINAL_POST_ID)
+        rendered_post_id = data.get(RENDERED_POST_ID)
+
+        if original_post_id is None and rendered_post_id is None:
             raise NullPostId()
 
-        post_config['original_post_id'] = original_post_id
+        if rendered_post_id is None:
+            post_config[POST_ID] = original_post_id
+            post_config[POST_TYPE] = POST_TYPE_ORIGINAL
+        else:
+            post_config[POST_ID] = rendered_post_id
+            post_config[POST_TYPE] = POST_TYPE_RENDERED
+            post_config[REPLACE] = data.get(REPLACE, 0)
+
+        post_config[AS_ORIGINAL] = data.get(AS_ORIGINAL, 0)
+
+        post_config[FONT] = data.get(FONT, 'anonymouspro.ttf')
+
+        post_config[IMG] = data.get(IMG, 1)
+        post_config[IMG_COUNT] = data.get(IMG_COUNT, 1)
+
+        post_config[IMG_WITH_TEXT] = data.get(IMG_WITH_TEXT, 1)
+        post_config[IMG_WITH_IMG] = data.get(IMG_WITH_IMG, 1)
+
+        # comment/original
+        post_config[IMG_TEXT_FROM] = data.get(IMG_TEXT_FROM, IMG_TEXT_COMMENT)
+
+        if post_config[IMG_TEXT_FROM] == IMG_TEXT_COMMENT:
+            # comment_id/comment with the biggest rating
+            post_config[IMG_COMMENT_ID] = data.get(IMG_COMMENT_ID)
+
+        # bottom/top
+        post_config[IMG_TEXT_LOCATION] = data.get(IMG_TEXT_LOCATION, BOTTOM)
+        post_config[IMG_TEXT_WITH_REF] = data.get(IMG_TEXT_WITH_REF, 1)
+        post_config[IMG_TEXT_WITH_COMMENT_IMG] = data.get(IMG_TEXT_WITH_COMMENT_IMG, 1)
 
         return post_config
 
@@ -159,39 +194,113 @@ class RenderPost(APIView):
         :param post_config: Configuration for building of post
         :return: Rendered post
         """
-        original_post = Post.objects.get(id=post_config['original_post_id'])
-        comments = original_post.comments.all()
-        images = original_post.images.all()
+        if post_config[POST_TYPE] == POST_TYPE_ORIGINAL:
+            post = Post.objects.get(id=post_config[POST_ID])
+            original_post = post
+        elif post_config[POST_TYPE] == POST_TYPE_RENDERED:
+            post = RenderedPost.objects.get(id=post_config[POST_ID])
+            original_post = post.post_id
+        else:
+            raise PostTypeIsNotDefined()
+
         project = original_post.source_id.project_id
 
-        rendered_post = RenderedPost(
-            post_id=original_post,
-            project_id=project,
-            # text=comments[0].text,
-        )
-
-        if len(comments) > 0:
-            rendered_post.text = comments[0].text
+        if post_config[POST_TYPE] == POST_TYPE_RENDERED and post_config[REPLACE] == 1:
+            rendered_post = post
+            rendered_post.images.all().delete()
         else:
-            rendered_post.text = original_post.text
+            rendered_post = RenderedPost(
+                post_id=original_post,
+                project_id=project,
+            )
 
-        rendered_post.save()
+        if post_config[AS_ORIGINAL]:
+            self._create_post_as_original(rendered_post, original_post)
+            return rendered_post
 
-        if len(images) > 0:
-            images[0].image.open()
-            original_img = Image.open(images[0].image)
-            rendered_img = self.image_builder.build(original_img, original_post.text)
+        # Build text for image
+        if post_config[IMG] == 1:
+            if post_config[IMG_COUNT] > 1:
+                rendered_post.save()
+                self._add_original_images(rendered_post, original_post, IMG_COUNT)
+                return rendered_post
+
+            image_text = ''
+            if post_config[IMG_WITH_TEXT] == 1:
+                if post_config[IMG_TEXT_FROM] == IMG_TEXT_ORIGINAL:
+                    image_text = self.text_builder.format_text(original_post.text)
+                if post_config[IMG_TEXT_FROM] == IMG_TEXT_COMMENT:
+                    comment = None
+                    if post_config[IMG_COMMENT_ID] is not None:
+                        comment_id = post_config[IMG_COMMENT_ID]
+                        comment = Comment.objects.get(id=comment_id)
+                    else:
+                        original_comments = original_post.comments.all().order_by('-rating')
+                        if len(original_comments) > 0:
+                            comment = original_comments[0]
+
+                    if comment:
+                        if post_config[IMG_TEXT_WITH_REF]:
+                            image_text = self.text_builder.format_text(comment.text, comment.ref_text)
+                        else:
+                            image_text = self.text_builder.format_text(comment.text)
+
+            pil_img = Image.new('RGB', (1, 1), color="white")
+            if post_config[IMG_WITH_IMG] == 1:
+                original_images = original_post.images.all()
+                if len(original_images) > 0:
+                    image = original_images[0]
+                    image.image.open()
+                    pil_img = Image.open(image.image)
+
+            text_location = post_config[IMG_TEXT_LOCATION]
+
+            rendered_pil_img = self.image_builder.build(pil_img, image_text,
+                                                        text_location=text_location,
+                                                        font_name=post_config[FONT])
 
             img_reader = io.BytesIO()
-            rendered_img.save(img_reader, format=original_img.format)
+            rendered_pil_img.save(img_reader, format=pil_img.format)
+
+            rendered_post.save()
 
             img_of_rendered_post = RenderedImage(
                 rendered_post_id=rendered_post
             )
             img_of_rendered_post.image.save(
-                self.image_builder.get_random_name(format=original_img.format),
+                self.image_builder.get_random_name(format=pil_img.format),
                 File(img_reader)
             )
             img_of_rendered_post.save()
 
-        return rendered_post
+            return rendered_post
+        else:
+            rendered_post.save()
+            return rendered_post
+
+    def _create_post_as_original(self, rendered_post, original_post):
+        rendered_post.text = original_post.text
+        rendered_post.images.all().delete()
+        rendered_post.save()
+
+        self._add_original_images(rendered_post, original_post)
+
+    def _add_original_images(self, rendered_post, original_post, count=None):
+        if count is None:
+            for img in original_post.images.all():
+                rendered_img = RenderedImage(
+                    rendered_post_id=rendered_post
+                )
+                rendered_img.image = img.image
+                rendered_img.save()
+
+        else:
+            for num, img in enumerate(original_post.images.all()):
+                if num == count:
+                    break
+
+                rendered_img = RenderedImage(
+                    rendered_post_id=rendered_post
+                )
+                rendered_img.image = img.image
+                rendered_img.save()

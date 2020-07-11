@@ -25,7 +25,8 @@ class Post(models.Model):
     date = models.IntegerField(default=0)
     platform_id = models.CharField(max_length=256)
     source_id = models.ForeignKey(Source, null=True, on_delete=models.SET_NULL)
-    text = models.TextField()
+    text = models.TextField(blank=True)
+    rating = models.IntegerField(default=0)
 
 
 class PostImage(models.Model):
@@ -35,9 +36,11 @@ class PostImage(models.Model):
 
 class Comment(models.Model):
     user_name = models.CharField(max_length=256)
-    text = models.TextField(default='')
-    ref_text = models.TextField(default='')
+    text = models.TextField(default='', blank=True)
+    ref_text = models.TextField(default='', blank=True)
     post_id = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
+    rating = models.IntegerField(default=0)
+    image = models.ImageField(upload_to='comment_images', null=True)
 
 
 class RenderedPost(models.Model):
@@ -51,7 +54,7 @@ class RenderedPost(models.Model):
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE)
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
     platform_id = models.CharField(max_length=256)
-    text = models.TextField()
+    text = models.TextField(blank=True)
     status = models.CharField(
         max_length=2,
         choices=STATUS_CHOICES,
