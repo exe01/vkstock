@@ -129,6 +129,14 @@
             <v-layout>
               <v-flex xs12>
                 <v-text-field
+                  label="Platform id"
+                  v-model="newProject.platform_id"
+                />
+              </v-flex>
+            </v-layout>
+            <v-layout>
+              <v-flex xs12>
+                <v-text-field
                   label="Token"
                   v-model="newProject.token"
                 />
@@ -170,7 +178,8 @@ export default {
       newProject: {
         name: '',
         token: '',
-        type_id: ''
+        type_id: '',
+        platform_id: '',
       },
     };
   },
@@ -213,7 +222,8 @@ export default {
       this.newProject = {
         name: '',
         token: '',
-        type_id: ''
+        type_id: '',
+        platform_id: '',
       };
     }
   }

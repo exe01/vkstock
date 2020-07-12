@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import axios from 'axios';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
@@ -13,6 +14,13 @@ import 'vuetify/dist/vuetify.min.css'; // Ensure you are using css-loader
 Vue.config.productionTip = false;
 
 axios.defaults.baseURL = 'http://localhost:8000/';
+// axios.defaults.params = {};
+// axios.defaults.params.api_url = axios.defaults.baseURL;
+axios.interceptors.request.use((config) => {
+  config.params = config.params || {};
+  config.params.media_url = `${axios.defaults.baseURL}media`;
+  return config;
+});
 
 Vue.prototype.$axios = axios;
 

@@ -13,7 +13,7 @@
       </v-card-title>
 
       <post-images
-        :links="renderImgLinks(post.images || [])"
+        :links="formatImgLinks(post.images || [])"
       />
 
       <v-card-actions>
@@ -27,7 +27,6 @@
       <div>
         <span class="grey--text caption ma-2 font-italic">id: {{ post.id }}</span>
       </div>
-
     </v-card>
 
     <v-dialog
@@ -46,7 +45,7 @@
         </v-card-title>
 
         <v-img
-          v-for="(imgLink, i) in renderImgLinks(post.images)"
+          v-for="(imgLink, i) in formatImgLinks(post.images)"
           :key="i"
           :src="imgLink"
         />
@@ -57,23 +56,35 @@
           <p>{{ originalPost.text }}</p>
 
           <post-images
-            :links="renderImgLinks(originalPost.images || [])"
+            :links="formatImgLinks(originalPost.images || [])"
             width="300"
           />
 
           <v-divider class="mt-3" />
 
-          <v-checkbox
-            v-for="(comment, i) in originalPost.comments"
-            :key="i"
-            v-model="checkboxModel"
-            :label="comment.text"
-          />
+          <v-layout
+            v-for="comment in originalPost.comments"
+            :key="comment.id"
+            align-center
+          >
+            <v-flex xs1>
+              <v-checkbox
+                v-model="selectedComments[comment.id]"
+              />
+            </v-flex>
+            <v-flex xs11>
+              <p class="mb-0 subheading">{{ formatCommentText(comment) }}</p>
+              <v-img
+                v-if="comment.image"
+                :src="comment.image"
+              />
+            </v-flex>
+          </v-layout>
         </v-card-text>
 
         <v-card-actions>
-          <v-btn flat color="#98ee99" @click="updateStatus('AC')">Accept</v-btn>
-          <v-btn flat color="#ff867c" @click="updateStatus('RE')">Reject</v-btn>
+          <v-btn flat color="#98ee99" @click="rerendPost()">Rerend</v-btn>
+          <v-btn flat color="#43C1DF" @click="rerendAsOriginal()">Rend as original</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -101,6 +112,8 @@ export default {
       settingDialog: false,
       originalPost: {},
       checkboxModel: false,
+
+      selectedComments: {},
     };
   },
   methods: {
@@ -114,7 +127,13 @@ export default {
       originalPost.images = originalPost.images || [];
       return originalPost;
     },
-    renderImgLinks(images) {
+    async getRenderedPost(postId) {
+      const resp = await this.$axios.get(`api/1.0/rendered_posts/${postId}`);
+      const renderedPosts = resp.data;
+      renderedPosts.images = renderedPosts.images || [];
+      return renderedPosts;
+    },
+    formatImgLinks(images) {
       const links = images.map((i) => i.image);
       return links;
     },
@@ -126,6 +145,41 @@ export default {
       });
 
       this.post.status = resp.data.status;
+    },
+    formatCommentText(comment) {
+      if (comment.ref_text.length > 0) {
+        return `*${comment.ref_text}*\n*${comment.text}*`;
+      }
+
+      return comment.text;
+    },
+    async rerendAsOriginal() {
+      const config = {
+        rendered_post_id: this.post.id,
+        replace: 1,
+        as_original: 1,
+      };
+
+      const resp = await this.$axios.post('/api/1.0/render_post', config);
+      this.post = await this.getRenderedPost(resp.data.id);
+    },
+    async rerendPost() {
+      const config = {
+        rendered_post_id: this.post.id,
+        replace: 1,
+      };
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const key in this.selectedComments) {
+        if (this.selectedComments[key] === true) {
+          config.img_text_from = 'comment';
+          config.img_comment_id = Number(key);
+          break;
+        }
+      }
+
+      const resp = await this.$axios.post('/api/1.0/render_post', config);
+      this.post = await this.getRenderedPost(resp.data.id);
     }
   }
 };
