@@ -156,12 +156,12 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 					}
 
 					comment.Text = deleteRefToUserFromText(comment.Text)
+				}
 
-					if len(vkComment.Attachments) > 0 {
-						commentImgUrl, err := convertPhotoAttachment(vkComment.Attachments[0])
-						if err == nil {
-							comment.Image = commentImgUrl
-						}
+				if len(vkComment.Attachments) > 0 {
+					commentImgUrl, err := convertPhotoAttachment(vkComment.Attachments[0])
+					if err == nil {
+						comment.Image = commentImgUrl
 					}
 				}
 
@@ -225,12 +225,18 @@ func (c *VKCollector) getTopVKComments(ownerId string, postId, countOfTop int) (
 
 	sort.Sort(ByLike(allComments))
 
-	topComments := allComments[:countOfTop]
+	topComments := make([]VKComment, 0, countOfTop)
+	if len(allComments) >= countOfTop {
+		topComments = allComments[:countOfTop]
+	} else {
+		topComments = allComments
+	}
+
 	return topComments, nil
 }
 
 func (c *VKCollector) getAllVKComments(ownerId string, postId int) ([]VKComment, error) {
-	count := 100
+	count := 50
 	allComments := make([]VKComment, 0, count)
 	var vkGetCommentsResponse *VKGetCommentsResponse
 	var err error
@@ -242,11 +248,11 @@ func (c *VKCollector) getAllVKComments(ownerId string, postId int) ([]VKComment,
 		}
 
 		vkComments := vkGetCommentsResponse.Response.Items
-		if len(vkComments) == 0 {
+		allComments = append(allComments, vkComments...)
+
+		if len(vkComments) < count {
 			break
 		}
-
-		allComments = append(allComments, vkComments...)
 	}
 
 	return allComments, nil

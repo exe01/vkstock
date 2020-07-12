@@ -5,8 +5,10 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -46,6 +48,16 @@ func NowMinusDaysUnix(days int64) int64 {
 	return time.Now().Unix() - secondsInDays
 }
 
+func DifInMinutesFromNowUnix(to int64) int64 {
+	now := time.Now().Unix()
+	return DifInMinutesUnix(now, to)
+}
+
+func DifInMinutesUnix(from, to int64) int64 {
+	difInSec := from - to
+	return difInSec / 60
+}
+
 func DownloadImage(url string) (io.ReadCloser, string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -70,4 +82,10 @@ func DefineFormatFromHeader(header http.Header) (string, error) {
 	format := typeAndFormat[1]
 
 	return format, nil
+}
+
+func GenerateRandomString(postfix string) string {
+	str := strconv.Itoa(rand.Int())
+	str += postfix
+	return str
 }

@@ -7,7 +7,6 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"vkstock/stock_worker/requester"
@@ -39,13 +38,6 @@ type VKPhoto struct {
 	Date    int    `json:"date"`
 }
 
-type PostBuilder interface {
-	Reset()
-	SetText(text string)
-	SetAttachments(attachments []string)
-	GetPost() map[string]string
-}
-
 type VKPostBuilder struct {
 	*requester.VKRequester
 	post map[string]string
@@ -68,28 +60,44 @@ func (b *VKPostBuilder) SetText(text string) {
 	b.post["message"] = text
 }
 
+func (b *VKPostBuilder) FromGroup(k bool) {
+	if k {
+		b.post["from_group"] = "1"
+	} else {
+		b.post["from_group"] = "0"
+	}
+}
+
 func (b *VKPostBuilder) SetAttachments(attachments []string) {
 	attachmentsParam := strings.Join(attachments, ",")
 	b.post["attachments"] = attachmentsParam
 }
 
-func (b *VKPostBuilder) SetPhotoByFile(file, groupId string) error {
-	uploadServerURL, err := b.getWallUploadServerURL(groupId)
+func (b *VKPostBuilder) DownloadAndSetImg(url, toOwner string) error {
+	uploadServerURL, err := b.getWallUploadServerURL(toOwner)
 	if err != nil {
 		return err
 	}
 
-	uploadResponse, err := b.loadPhoto(uploadServerURL, file)
+	uploadResponse, err := b.loadPhoto(uploadServerURL, url)
 	if err != nil {
 		return err
 	}
 
-	vkPhoto, err := b.saveWallPhoto(groupId, uploadResponse)
+	vkPhoto, err := b.saveWallPhoto(toOwner, uploadResponse)
 	if err != nil {
 		return err
 	}
 
-	b.post["attachments"] = "photo" + strconv.Itoa(vkPhoto.OwnerId) + "_" + strconv.Itoa(vkPhoto.Id)
+	attachment := fmt.Sprintf("photo%d_%d", vkPhoto.OwnerId, vkPhoto.Id)
+	attachments := b.post["attachments"]
+	if len(attachments) > 0 {
+		attachments = attachments + "," + attachment
+	} else {
+		attachments = attachment
+	}
+	b.post["attachments"] = attachments
+
 	return nil
 }
 
@@ -102,7 +110,7 @@ func (b *VKPostBuilder) getWallUploadServerURL(groupId string) (string, error) {
 		"group_id": groupId,
 	}
 
-	req, err := b.CreateVKRequest("GET", "method/photos.getWallUploadServer", params, nil)
+	req, err := b.CreatePrivilegedVKRequest("GET", "method/photos.getWallUploadServer", params, nil)
 	if err != nil {
 		return "", err
 	}
@@ -121,24 +129,20 @@ func (b *VKPostBuilder) getWallUploadServerURL(groupId string) (string, error) {
 	return vkUploadServer.Response.UploadURL, nil
 }
 
-func (b *VKPostBuilder) loadPhoto(uploadServerURL, path string) (*VKUploadResponse, error) {
-	size, err := utils.GetFileSizeMB(path)
+func (b *VKPostBuilder) loadPhoto(uploadServerURL, imageUrl string) (*VKUploadResponse, error) {
+	photo, format, err := utils.DownloadImage(imageUrl)
 	if err != nil {
 		return nil, err
 	}
-	if size > 50 {
-		errorMessage := fmt.Sprintf("size of file > 50 MB (%d MB)", size)
-		return nil, errors.New(errorMessage)
-	}
+
+	photoName := utils.GenerateRandomString("."+format)
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	file, _ := os.Open(path)
-	fileInfo, _ := file.Stat()
-	part, _ := writer.CreateFormFile("photo", fileInfo.Name())
-	io.Copy(part, file)
-	file.Close()
+	part, _ := writer.CreateFormFile("photo", photoName)
+	io.Copy(part, photo)
+	photo.Close()
 
 	err = writer.Close()
 	if err != nil {
@@ -173,7 +177,7 @@ func (b *VKPostBuilder) saveWallPhoto(groupId string, uploadResponse *VKUploadRe
 		"group_id": groupId,
 	}
 
-	req, err := b.CreateVKRequest("GET", "method/photos.saveWallPhoto", params, nil)
+	req, err := b.CreatePrivilegedVKRequest("GET", "method/photos.saveWallPhoto", params, nil)
 	if err != nil {
 		return nil, err
 	}

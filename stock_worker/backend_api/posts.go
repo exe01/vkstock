@@ -12,21 +12,6 @@ import (
 	"vkstock/stock_worker/utils"
 )
 
-func (api *StockAPI) GetPosts(params map[string]string) ([]models.Post, error) {
-	resp, err := api.GetModels("posts", params)
-	if err != nil {
-		return nil, err
-	}
-
-	var setPosts models.SetPosts
-	err = utils.ParseResponseBody(resp, &setPosts)
-	if err != nil {
-		return nil, err
-	}
-
-	return setPosts.Results, nil
-}
-
 func (api *StockAPI) GetLastPost(sourceId int) (models.Post, error) {
 	var post models.Post
 	params := map[string]string {
@@ -47,6 +32,21 @@ func (api *StockAPI) GetLastPost(sourceId int) (models.Post, error) {
 	}
 
 	return posts[0], nil
+}
+
+func (api *StockAPI) GetPosts(params map[string]string) ([]models.Post, error) {
+	resp, err := api.GetModels("posts", params)
+	if err != nil {
+		return nil, err
+	}
+
+	var setPosts models.SetPosts
+	err = utils.ParseResponseBody(resp, &setPosts)
+	if err != nil {
+		return nil, err
+	}
+
+	return setPosts.Results, nil
 }
 
 func (api *StockAPI) SavePost(post models.Post) (models.Post, error) {
