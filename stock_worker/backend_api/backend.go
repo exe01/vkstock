@@ -18,12 +18,18 @@ func (e ModelNotFound) Error() string {
 }
 
 type StockAPI struct {
+	Address string
+	Version string
 	URL    string
 	client *http.Client
 }
 
-func NewStockAPI(URL string) *StockAPI {
+func NewStockAPI(address, version string) *StockAPI {
+	URL := fmt.Sprintf("%s/api/%s", address, version)
+
 	stockAPI := &StockAPI{
+		address,
+		version,
 		URL,
 		&http.Client{},
 	}
@@ -56,6 +62,7 @@ func (api *StockAPI) GetModels(modelName string, params map[string]string) (*htt
 	}
 
 	query := req.URL.Query()
+	query.Add("media_url", api.Address+"/media")
 
 	if params != nil {
 		for key, value := range params {
@@ -76,7 +83,39 @@ func (api *StockAPI) GetModels(modelName string, params map[string]string) (*htt
 func (api *StockAPI) GetModelById(modelName string, id string) (*http.Response, error) {
 	modelURL := fmt.Sprintf("%s/%s/%s/", api.URL, modelName, id)
 
+	req, err := http.NewRequest("GET", modelURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	query := req.URL.Query()
+	query.Add("media_url", api.Address+"/media")
+	req.URL.RawQuery = query.Encode()
+
 	resp, err := api.client.Get(modelURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (api *StockAPI) PatchModel(modelName string, id string, model interface{}) (*http.Response, error) {
+	modelURL := fmt.Sprintf("%s/%s/%s/", api.URL, modelName, id)
+
+	modelBytes, err := json.Marshal(model)
+	if err != nil {
+		return nil, err
+	}
+	modelReader := bytes.NewReader(modelBytes)
+
+	req, err := http.NewRequest("PATCH", modelURL, modelReader)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := api.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

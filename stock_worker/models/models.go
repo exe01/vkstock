@@ -7,6 +7,11 @@ type Set struct {
 	Results  []interface{} `json:"results"`
 }
 
+type SetProjects struct {
+	Set
+	Results []Project `json:"results"`
+}
+
 type SetSources struct {
 	Set
 	Results []Source `json:"results"`
@@ -15,6 +20,11 @@ type SetSources struct {
 type SetPosts struct {
 	Set
 	Results []Post `json:"results"`
+}
+
+type SetRenderedPosts struct {
+	Set
+	Results []RenderedPost `json:"results"`
 }
 
 type Model struct {
@@ -32,6 +42,7 @@ type Project struct {
 	Name   string `json:"name"`
 	TypeId int    `json:"type_id"`
 	Token  string `json:"token"`
+	PlatformId string `json:"platform_id"`
 }
 
 type Source struct {
@@ -50,6 +61,7 @@ type Post struct {
 	Images     []PostImage `json:"images"`
 	Comments   []Comment   `json:"comments"`
 	Date       int64       `json:"date"`
+	Rating	   int		   `json:"rating"`
 }
 
 type PostImage struct {
@@ -64,6 +76,17 @@ type Comment struct {
 	Text     string `json:"text"`
 	PostId   int    `json:"post_id"`
 	RefText  string `json:"ref_text"`
+	Rating	 int    `json:"rating"`
+	Image 	 string `json:"image"`
+}
+
+type CommentWithoutImage struct {
+	Model
+	Username string `json:"user_name"`
+	Text     string `json:"text"`
+	PostId   int    `json:"post_id"`
+	RefText  string `json:"ref_text"`
+	Rating	 int    `json:"rating"`
 }
 
 type RenderedPost struct {
@@ -71,6 +94,7 @@ type RenderedPost struct {
 	ProjectId  int             `json:"project_id"`
 	PostId     int             `json:"post_id"`
 	PlatformId string          `json:"platform_id"`
+	PostedDate int64		   `json:"posted_date"`
 	Text       string          `json:"text"`
 	Images     []RenderedImage `json:"images"`
 	Status     string          `json:"status"`

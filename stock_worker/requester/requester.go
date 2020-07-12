@@ -10,17 +10,19 @@ type VKRequester struct {
 	VKURL  string
 	Client *http.Client
 
-	accessToken string
-	version     string
+	serviceToken string
+	userToken    string
+	version      string
 }
 
-func NewVKRequester(accessToken string, version string) *VKRequester {
+func NewVKRequester(serviceToken, userToken string, version string) *VKRequester {
 	vkURL := "https://api.vk.com"
 
 	vkRequester := &VKRequester{
 		vkURL,
 		&http.Client{},
-		accessToken,
+		serviceToken,
+		userToken,
 		version,
 	}
 
@@ -28,6 +30,16 @@ func NewVKRequester(accessToken string, version string) *VKRequester {
 }
 
 func (r *VKRequester) CreateVKRequest(method, action string, params map[string]string, body io.Reader) (*http.Request, error) {
+	params["access_token"] = r.serviceToken
+	return r.createVKRequest(method, action, params, body)
+}
+
+func (r *VKRequester) CreatePrivilegedVKRequest(method, action string, params map[string]string, body io.Reader) (*http.Request, error) {
+	params["access_token"] = r.userToken
+	return r.createVKRequest(method, action, params, body)
+}
+
+func (r *VKRequester) createVKRequest(method, action string, params map[string]string, body io.Reader) (*http.Request, error) {
 	if !strings.HasPrefix(action, "/") {
 		action = "/" + action
 	}
@@ -37,13 +49,11 @@ func (r *VKRequester) CreateVKRequest(method, action string, params map[string]s
 		return nil, err
 	}
 
-	// All request to VKApi must contain 2 parameters:
-	// v - version;
-	// access_token - authorization token;
-	query := req.URL.Query()
-	query.Add("v", r.version)
-	query.Add("access_token", r.accessToken)
+	if _, ok := params["v"]; !ok {
+		params["v"] = r.version
+	}
 
+	query := req.URL.Query()
 	if params != nil {
 		for key, value := range params {
 			query.Add(key, value)
