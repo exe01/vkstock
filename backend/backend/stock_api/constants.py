@@ -8,6 +8,8 @@ REPLACE = 'replace'
 
 AS_ORIGINAL = 'as_original'
 
+AUTO = 'auto'
+
 FONT = 'font'
 
 IMG = 'img'

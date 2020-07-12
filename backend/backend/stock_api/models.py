@@ -11,6 +11,7 @@ class Type(models.Model):
 class Project(models.Model):
     name = models.CharField(max_length=256)
     token = models.CharField(max_length=256)
+    platform_id = models.CharField(max_length=256, default="", blank=True)
     type_id = models.ForeignKey(Type, on_delete=models.CASCADE)
 
 
@@ -54,6 +55,7 @@ class RenderedPost(models.Model):
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE)
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE)
     platform_id = models.CharField(max_length=256)
+    posted_date = models.IntegerField(default=0)
     text = models.TextField(blank=True)
     status = models.CharField(
         max_length=2,

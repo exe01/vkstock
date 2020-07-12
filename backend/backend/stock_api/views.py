@@ -166,6 +166,8 @@ class RenderPost(APIView):
 
         post_config[AS_ORIGINAL] = data.get(AS_ORIGINAL, 0)
 
+        post_config[AUTO] = data.get(AUTO, 1)
+
         post_config[FONT] = data.get(FONT, 'anonymouspro.ttf')
 
         post_config[IMG] = data.get(IMG, 1)
@@ -226,11 +228,13 @@ class RenderPost(APIView):
                 return rendered_post
 
             image_text = ''
+            image_text_from_post = False
+            comment = None
             if post_config[IMG_WITH_TEXT] == 1:
                 if post_config[IMG_TEXT_FROM] == IMG_TEXT_ORIGINAL:
                     image_text = self.text_builder.format_text(original_post.text)
+                    image_text_from_post = True
                 if post_config[IMG_TEXT_FROM] == IMG_TEXT_COMMENT:
-                    comment = None
                     if post_config[IMG_COMMENT_ID] is not None:
                         comment_id = post_config[IMG_COMMENT_ID]
                         comment = Comment.objects.get(id=comment_id)
@@ -244,20 +248,46 @@ class RenderPost(APIView):
                             image_text = self.text_builder.format_text(comment.text, comment.ref_text)
                         else:
                             image_text = self.text_builder.format_text(comment.text)
+                    elif post_config[AUTO] == 1:
+                        image_text = self.text_builder.format_text(original_post.text)
 
-            pil_img = Image.new('RGB', (1, 1), color="white")
+            width = 800
+
+            # TODO delete image hardcode !!
+            pil_img = Image.new('RGB', (1000, 1), color="white")
+            pil_img.format = 'jpeg'
             if post_config[IMG_WITH_IMG] == 1:
                 original_images = original_post.images.all()
                 if len(original_images) > 0:
                     image = original_images[0]
                     image.image.open()
                     pil_img = Image.open(image.image)
+                elif post_config[AUTO] == 1 and image_text_from_post is False:
+                    width = 1000
+                    image_text = self.text_builder.format_text(image_text, original_post.text, wrapper='')
 
-            text_location = post_config[IMG_TEXT_LOCATION]
+            if image_text_from_post and post_config[AUTO]:
+                text_location = TOP
+            else:
+                text_location = post_config[IMG_TEXT_LOCATION]
 
-            rendered_pil_img = self.image_builder.build(pil_img, image_text,
-                                                        text_location=text_location,
-                                                        font_name=post_config[FONT])
+            comment_img = None
+            if post_config[IMG_TEXT_WITH_COMMENT_IMG] == 1 and comment is not None:
+                if comment is not None:
+                    try:
+                        comment.image.open()
+                        comment_img = Image.open(comment.image)
+                    except ValueError:
+                        pass
+
+            rendered_pil_img = self.image_builder.build(
+                pil_img,
+                text=image_text,
+                text_location=text_location,
+                font_name=post_config[FONT],
+                comment_img=comment_img,
+                width=width
+            )
 
             img_reader = io.BytesIO()
             rendered_pil_img.save(img_reader, format=pil_img.format)
@@ -268,7 +298,7 @@ class RenderPost(APIView):
                 rendered_post_id=rendered_post
             )
             img_of_rendered_post.image.save(
-                self.image_builder.get_random_name(format=pil_img.format),
+                self.text_builder.get_random_name(format=pil_img.format),
                 File(img_reader)
             )
             img_of_rendered_post.save()
@@ -285,22 +315,13 @@ class RenderPost(APIView):
 
         self._add_original_images(rendered_post, original_post)
 
-    def _add_original_images(self, rendered_post, original_post, count=None):
-        if count is None:
-            for img in original_post.images.all():
-                rendered_img = RenderedImage(
-                    rendered_post_id=rendered_post
-                )
-                rendered_img.image = img.image
-                rendered_img.save()
+    def _add_original_images(self, rendered_post, original_post, count=-1):
+        for num, img in enumerate(original_post.images.all()):
+            if num == count:
+                break
 
-        else:
-            for num, img in enumerate(original_post.images.all()):
-                if num == count:
-                    break
-
-                rendered_img = RenderedImage(
-                    rendered_post_id=rendered_post
-                )
-                rendered_img.image = img.image
-                rendered_img.save()
+            rendered_img = RenderedImage(
+                rendered_post_id=rendered_post
+            )
+            rendered_img.image = img.image
+            rendered_img.save()

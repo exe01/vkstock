@@ -12,6 +12,20 @@ from backend.stock_api.models import (
 from rest_framework import serializers
 
 
+class ImageRepresentationModelSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context['request']
+
+        api_url = request.query_params.get('media_url')
+        if api_url:
+            if not api_url.endswith('/'):
+                api_url += '/'
+            ret['image'] = api_url + ret['image']
+
+        return ret
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -42,13 +56,17 @@ class SourceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PostImageSerializer(serializers.ModelSerializer):
+class PostImageSerializer(ImageRepresentationModelSerializer):
+    image = serializers.ImageField(use_url=False)
+
     class Meta:
         model = PostImage
         fields = '__all__'
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentSerializer(ImageRepresentationModelSerializer):
+    image = serializers.ImageField(use_url=False)
+
     class Meta:
         model = Comment
         fields = '__all__'
@@ -63,7 +81,9 @@ class PostSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RenderedImageSerializer(serializers.ModelSerializer):
+class RenderedImageSerializer(ImageRepresentationModelSerializer):
+    image = serializers.ImageField(use_url=False)
+
     class Meta:
         model = RenderedImage
         fields = '__all__'

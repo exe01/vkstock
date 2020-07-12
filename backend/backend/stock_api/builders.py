@@ -9,36 +9,32 @@ class ImageBuilder:
     FONT_POINTS = 40
     SYMBOL_WIDTH = 22
 
-    def build(self, original_img, text, width=800, text_margin=30, text_location='top', font_name='anonymouspro.ttf'):
-        resized_img = self.resize_img_by_width(original_img, width)
+    def build(self, original_img,
+              text='', width=800,
+              text_margin=30, text_location='top',
+              font_name='anonymouspro.ttf', comment_img=None):
 
-        if len(text) == 0:
-            return resized_img
+        resized_original_img = self.resize_img_by_width(original_img, width)
+        main_img_width, main_img_height = resized_original_img.size
 
-        # 40 points ~ 22px of width by 1 symbol
-        font = ImageFont.truetype('fonts/'+font_name, self.FONT_POINTS)
+        if len(text) == 0 and comment_img is None:
+            return resized_original_img
 
-        xsize, ysize = resized_img.size
+        comment_back = Image.new('RGB', (main_img_width, 1), color="white")
 
-        text_width = xsize - 2*text_margin
-        symbols_per_line = text_width / self.SYMBOL_WIDTH
-        text = self.separate_text_by_lines(text, symbols_per_line)
-        _, text_height = self.textsize(text, font)
+        if len(text) != 0:
+            comment_back = self._add_text_to_pattern(comment_back, text, font_name, text_margin)
 
-        full_text_block_height = text_height+2*text_margin
-        full_image_height = ysize + full_text_block_height
-
-        rendered_img = Image.new('RGB', (xsize, full_image_height), color="white")
-        img_drawer = ImageDraw.Draw(rendered_img)
+        if comment_img is not None:
+            comment_back = self._add_img_to_pattern(comment_back, comment_img)
 
         if text_location == 'top':
-            rendered_img.paste(resized_img, (0, full_text_block_height))
-            img_drawer.multiline_text((text_margin, text_margin), text, fill=(0, 0, 0), font=font)
-        elif text_location == 'bottom':
-            rendered_img.paste(resized_img, (0, 0))
-            img_drawer.multiline_text((text_margin, text_margin+ysize), text, fill=(0, 0, 0), font=font)
+            result_img = self.vertically_concatenate_images(comment_back, resized_original_img)
+        else:
+            # 'bottom'
+            result_img = self.vertically_concatenate_images(resized_original_img, comment_back)
 
-        return rendered_img
+        return result_img
 
     def resize_img_by_width(self, img, width: int):
         orig_width, orig_height = img.size
@@ -46,6 +42,38 @@ class ImageBuilder:
         height = int(orig_height / scale_factor)
         resized_img = img.resize((width, height))
         return resized_img
+
+    def _add_text_to_pattern(self, comment_back, text, font_name, text_margin):
+        font = ImageFont.truetype('fonts/' + font_name, self.FONT_POINTS)
+        text_width = comment_back.width - 2 * text_margin
+        symbols_per_line = text_width / self.SYMBOL_WIDTH
+        text = self.separate_text_by_lines(text, symbols_per_line)
+        _, text_height = self.textsize(text, font)
+
+        full_text_block_height = text_height + 2 * text_margin
+
+        background_of_text = Image.new('RGB', (comment_back.width, full_text_block_height), color="white")
+        background_of_text_drawer = ImageDraw.Draw(background_of_text)
+
+        background_of_text_drawer.multiline_text(
+            (text_margin, text_margin),
+            text,
+            fill=(0, 0, 0),
+            font=font,
+        )
+
+        return self.vertically_concatenate_images(comment_back, background_of_text)
+
+    def _add_img_to_pattern(self, comment_back, img):
+        img_width = int(comment_back.width / 1.5)
+        resized_img = self.resize_img_by_width(img, img_width)
+
+        background_of_img = Image.new('RGB', (comment_back.width, resized_img.height), color="white")
+        imx_x = (comment_back.width - resized_img.width) / 2
+        imx_x = int(imx_x)
+
+        background_of_img.paste(resized_img, (imx_x, 0))
+        return self.vertically_concatenate_images(comment_back, background_of_img)
 
     def textsize(self, text, font):
         """
@@ -68,14 +96,22 @@ class ImageBuilder:
 
         return '\n'.join(new_paragraphs)
 
-    def get_random_name(self, length=32, format=None):
-        letters_and_digits = string.ascii_letters + string.digits
-        random_name = ''.join((random.choice(letters_and_digits) for _ in range(length)))
+    def vertically_concatenate_images(self, img1, img2):
+        result_img = Image.new(
+            'RGB',
+            (img1.width, img1.height+img2.height),
+            color="white",
+        )
+        result_img.paste(
+            img1,
+            (0, 0)
+        )
+        result_img.paste(
+            img2,
+            (0, img1.height)
+        )
 
-        if format:
-            random_name += '.'+format.lower()
-
-        return random_name
+        return result_img
 
 class TextBuilder:
     def format_text(self, text, ref_text='', wrapper='*'):
@@ -106,3 +142,12 @@ class TextBuilder:
 
     def wrap_text(self, text, wrapper=''):
         return '{}{}{}'.format(wrapper, text, wrapper)
+
+    def get_random_name(self, length=32, format=None):
+        letters_and_digits = string.ascii_letters + string.digits
+        random_name = ''.join((random.choice(letters_and_digits) for _ in range(length)))
+
+        if format:
+            random_name += '.'+format.lower()
+
+        return random_name
