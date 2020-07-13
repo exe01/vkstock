@@ -131,5 +131,9 @@ REST_FRAMEWORK = {
 
 # Media files
 
-MEDIA_ROOT = '/home/skupov/VKStock/backend/media/'
+if os.environ.get('DJANGO_MEDIA_ROOT'):
+    MEDIA_ROOT = os.environ.get('DJANGO_MEDIA_ROOT')
+else:
+    MEDIA_ROOT = '/home/skupov/VKStock/backend/media/'
+
 MEDIA_URL = '/media/'
