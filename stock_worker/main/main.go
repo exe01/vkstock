@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	stockAPI := backend_api.NewStockAPI("http://localhost:8000", "1.0")
+	stockAPI := backend_api.NewStockAPI("http://backend:8000", "1.0")
 
 	postPosts(stockAPI, 0, 30)
 	//
