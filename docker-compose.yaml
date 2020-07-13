@@ -21,6 +21,10 @@ services:
   stock_worker:
     build:
       context: ./stock_worker
+    depends_on:
+      - backend
+    links:
+      - backend
 
   proxy:
     image: "nginx:alpine"
