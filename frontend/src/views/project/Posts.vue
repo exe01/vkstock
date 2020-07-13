@@ -136,12 +136,12 @@ export default {
       this.totalPages = totalPages;
     },
     async getProjectById(projectId) {
-      const resp = await this.$axios.get(`api/1.0/projects/${projectId}`);
+      const resp = await this.$axios.get(`/api/1.0/projects/${projectId}`);
       const project = resp.data;
       return project;
     },
     async getRenderedPosts(projectId, page, status) {
-      const resp = await this.$axios.get('api/1.0/rendered_posts', {
+      const resp = await this.$axios.get('/api/1.0/rendered_posts', {
         params: {
           project_id: projectId,
           page,

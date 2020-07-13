@@ -75,8 +75,9 @@
             <v-flex xs11>
               <p class="mb-0 subheading">{{ formatCommentText(comment) }}</p>
               <v-img
+                max-width="300"
                 v-if="comment.image"
-                :src="comment.image"
+                :src="'/media/'+comment.image"
               />
             </v-flex>
           </v-layout>
@@ -122,19 +123,19 @@ export default {
       this.settingDialog = true;
     },
     async getOriginalPost(postId) {
-      const resp = await this.$axios.get(`api/1.0/posts/${postId}`);
+      const resp = await this.$axios.get(`/api/1.0/posts/${postId}`);
       const originalPost = resp.data;
       originalPost.images = originalPost.images || [];
       return originalPost;
     },
     async getRenderedPost(postId) {
-      const resp = await this.$axios.get(`api/1.0/rendered_posts/${postId}`);
+      const resp = await this.$axios.get(`/api/1.0/rendered_posts/${postId}`);
       const renderedPosts = resp.data;
       renderedPosts.images = renderedPosts.images || [];
       return renderedPosts;
     },
     formatImgLinks(images) {
-      const links = images.map((i) => i.image);
+      const links = images.map((i) => `/media/${i.image}`);
       return links;
     },
     async updateStatus(status) {

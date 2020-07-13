@@ -192,7 +192,7 @@ export default {
       this.projects = await this.getProjects();
     },
     async getProjects() {
-      const resp = await this.$axios.get('api/1.0/projects');
+      const resp = await this.$axios.get('/api/1.0/projects');
       const projects = resp.data.results;
       return projects;
     },

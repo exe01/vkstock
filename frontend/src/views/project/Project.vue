@@ -89,7 +89,7 @@ export default {
       this.project = await this.getProjectById(projectId);
     },
     async getProjectById(projectId) {
-      const resp = await this.$axios.get(`api/1.0/projects/${projectId}`);
+      const resp = await this.$axios.get(`/api/1.0/projects/${projectId}`);
       const project = resp.data;
       return project;
     },
