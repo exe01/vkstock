@@ -18,3 +18,22 @@ services:
     volumes:
       - ./frontend:/app
 
+  stock_worker:
+    build:
+      context: ./stock_worker
+
+  proxy:
+    image: "nginx:alpine"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ./proxy/ssl:/etc/ssl/
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+    links:
+      - backend
+      - frontend
+
