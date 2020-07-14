@@ -45,7 +45,8 @@ func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minut
 	for {
 		projects, err := stockAPI.GetProjects(nil)
 		if err != nil {
-			log.Print(err)
+			log.Println("Error while receiving project:")
+			log.Println(err)
 		}
 
 		for _, project := range projects  {
@@ -55,7 +56,8 @@ func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minut
 
 			lastPostedPost, err := stockAPI.GetLastPostedPost(project.Id)
 			if err != nil {
-				log.Print(err)
+				log.Println("Error while getting last posted post:")
+				log.Println(err)
 			}
 
 			difInMinutes := utils.DifInMinutesFromNowUnix(lastPostedPost.PostedDate)
@@ -75,7 +77,8 @@ func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minut
 				for _, image := range acceptedPost.Images {
 					err = vkPostBuilder.DownloadAndSetImg(image.Image, project.PlatformId)
 					if err != nil {
-						log.Print(err)
+						log.Println("Error while setting img to vk post:")
+						log.Println(err)
 					}
 				}
 
