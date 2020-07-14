@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -88,4 +90,15 @@ func GenerateRandomString(postfix string) string {
 	str := strconv.Itoa(rand.Int())
 	str += postfix
 	return str
+}
+
+func PrettyJson(msg []byte) string {
+	var prettyJSON bytes.Buffer
+	err := json.Indent(&prettyJSON, msg, "", "\t")
+	if err != nil {
+		log.Println("JSON parse error: ", err)
+		return ""
+	}
+
+	return prettyJSON.String()
 }

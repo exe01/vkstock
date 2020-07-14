@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
+	"vkstock/stock_worker/utils"
 )
 
 type ModelNotFound struct {
@@ -15,6 +17,21 @@ type ModelNotFound struct {
 
 func (e ModelNotFound) Error() string {
 	return fmt.Sprintf("%v: %v", e.When, e.What)
+}
+
+type BadRequest struct {
+	res *http.Response
+}
+
+func (e BadRequest) Error() string {
+	body, _ := ioutil.ReadAll(e.res.Body)
+
+	respBody := utils.PrettyJson(body)
+	if respBody == ""{
+		respBody = string(body)
+	}
+
+	return fmt.Sprintf("Error code: %d\nBody:%s", e.res.StatusCode, respBody)
 }
 
 type StockAPI struct {
@@ -50,6 +67,10 @@ func (api *StockAPI) SaveModel(modelName string, model interface{}) (*http.Respo
 		return nil, err
 	}
 
+	if resp.StatusCode >= 400 {
+		return nil, BadRequest{resp}
+	}
+
 	return resp, nil
 }
 
@@ -77,6 +98,10 @@ func (api *StockAPI) GetModels(modelName string, params map[string]string) (*htt
 		return nil, err
 	}
 
+	if resp.StatusCode >= 400 {
+		return nil, BadRequest{resp}
+	}
+
 	return resp, nil
 }
 
@@ -95,6 +120,10 @@ func (api *StockAPI) GetModelById(modelName string, id string) (*http.Response, 
 	resp, err := api.client.Get(modelURL)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, BadRequest{resp}
 	}
 
 	return resp, nil
@@ -118,6 +147,10 @@ func (api *StockAPI) PatchModel(modelName string, id string, model interface{}) 
 	resp, err := api.client.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, BadRequest{resp}
 	}
 
 	return resp, nil

@@ -45,7 +45,7 @@ func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minut
 	for {
 		projects, err := stockAPI.GetProjects(nil)
 		if err != nil {
-			log.Println("Error while receiving project:")
+			log.Println("Error while getting project:")
 			log.Println(err)
 		}
 
