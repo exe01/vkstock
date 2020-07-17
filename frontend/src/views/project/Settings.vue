@@ -51,6 +51,14 @@
         <v-card>
           <v-card-title>
             <h2>Token</h2>
+            <v-spacer />
+            <v-btn
+              color="#43C1DF"
+              dark
+              @click="editTokenDialog = true"
+            >
+              Edit token
+            </v-btn>
           </v-card-title>
           <v-card-text>
             {{ project.token }}
@@ -58,6 +66,87 @@
         </v-card>
       </v-flex>
     </v-layout>
+
+    <v-layout class="mt-4">
+      <v-flex xs6>
+        <v-card>
+          <v-card-title>
+            <h2>Platform Id</h2>
+            <v-spacer />
+            <v-btn
+              color="#43C1DF"
+              dark
+              @click="editPlatformIdDialog = true"
+            >
+              Edit Platform Id
+            </v-btn>
+          </v-card-title>
+          <v-card-text>
+            {{ project.platform_id }}
+          </v-card-text>
+        </v-card>
+      </v-flex>
+    </v-layout>
+
+    <!-- Edit Platform Id form -->
+    <v-dialog
+      v-model="editPlatformIdDialog"
+      max-width="600px"
+    >
+      <v-card
+        class="px-3"
+      >
+        <v-card-title>
+          <h2>Edit Platform Id</h2>
+        </v-card-title>
+
+        <v-card-text>
+          <v-layout>
+            <v-flex xs12>
+              <v-text-field
+                label="Platform Id"
+                v-model="newPlatformId"
+              />
+            </v-flex>
+          </v-layout>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn flat color="#98ee99" @click="editPlatformId()">Edit</v-btn>
+          <v-btn flat color="#ff867c" @click="newPlatformId='';editPlatformIdDialog=false">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Edit token form -->
+    <v-dialog
+      v-model="editTokenDialog"
+      max-width="600px"
+    >
+      <v-card
+        class="px-3"
+      >
+        <v-card-title>
+          <h2>Edit token</h2>
+        </v-card-title>
+
+        <v-card-text>
+          <v-layout>
+            <v-flex xs12>
+              <v-text-field
+                label="Token"
+                v-model="newToken"
+              />
+            </v-flex>
+          </v-layout>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn flat color="#98ee99" @click="editToken()">Edit</v-btn>
+          <v-btn flat color="#ff867c" @click="newToken='';editTokenDialog=false">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Create source form -->
     <v-dialog
@@ -138,6 +227,12 @@ export default {
         { text: 'Actions', sortable: false, align: 'center' },
       ],
       addSourceDialog: false,
+
+      newPlatformId: '',
+      editPlatformIdDialog: false,
+
+      newToken: '',
+      editTokenDialog: false,
     };
   },
   watch: {
@@ -222,6 +317,32 @@ export default {
         platform_id: '',
         project_id: undefined,
       };
+    },
+    async editToken() {
+      const resp = await this.$axios.patch(`/api/1.0/projects/${this.project.id}/`,
+        {
+          token: this.newToken,
+        });
+
+      if (resp.status === 200) {
+        console.log('Token was updated');
+        this.newToken = '';
+        this.editTokenDialog = false;
+        this.setProject();
+      }
+    },
+    async editPlatformId() {
+      const resp = await this.$axios.patch(`/api/1.0/projects/${this.project.id}/`,
+        {
+          platform_id: this.newPlatformId
+        });
+
+      if (resp.status === 200) {
+        console.log('Platform id was updated');
+        this.newPlatformId = '';
+        this.editPlatformIdDialog = false;
+        this.setProject();
+      }
     },
 
     formatType(id) {

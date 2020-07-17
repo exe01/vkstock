@@ -53,12 +53,27 @@
         <v-card-text>
           <v-divider class="mb-3" />
 
-          <p>{{ originalPost.text }}</p>
+          <v-layout
+            align-center
+          >
+            <v-flex xs1>
+              <v-checkbox
+                v-model="selectedOriginalText"
+              />
+            </v-flex>
+            <v-flex xs11>
+              <p class="mb-0 subheading">{{ originalPost.text }}</p>
+            </v-flex>
+          </v-layout>
 
-          <post-images
-            :links="formatImgLinks(originalPost.images || [])"
-            width="300"
-          />
+          <v-layout>
+            <v-flex xs12>
+              <post-images
+                :links="formatImgLinks(originalPost.images || [])"
+                width="300"
+              />
+            </v-flex>
+          </v-layout>
 
           <v-divider class="mt-3" />
 
@@ -115,6 +130,7 @@ export default {
       checkboxModel: false,
 
       selectedComments: {},
+      selectedOriginalText: true,
     };
   },
   methods: {
@@ -170,10 +186,15 @@ export default {
         replace: 1,
       };
 
+      if (this.selectedOriginalText) {
+        config.img_text_with_original_text = 1;
+      } else {
+        config.img_text_with_original_text = 0;
+      }
+
       // eslint-disable-next-line no-restricted-syntax
       for (const key in this.selectedComments) {
         if (this.selectedComments[key] === true) {
-          config.img_text_from = 'comment';
           config.img_comment_id = Number(key);
           break;
         }

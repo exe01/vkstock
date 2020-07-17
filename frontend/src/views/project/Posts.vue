@@ -3,6 +3,11 @@
     style="width: 100%"
     grid-list-xl
   >
+    <scroll-to-component
+      ref="topOfPage"
+      :align-to-top="true"
+    />
+
     <!-- Sorting card -->
     <v-layout>
       <v-flex>
@@ -35,6 +40,7 @@
       </v-flex>
     </v-layout>
 
+    <!-- Top pagination -->
     <v-layout
       v-if="totalPages > 0"
       justify-center
@@ -69,6 +75,7 @@
       </v-flex>
     </v-layout>
 
+    <!-- Bottom pagination -->
     <v-layout
       v-if="totalPages > 0"
       justify-center
@@ -90,6 +97,7 @@
 
 <script>
 import RenderedPost from '@/components/renderedPost.vue';
+import ScrollToComponent from '@/components/scrollToComponent.vue';
 
 export default {
   props: {
@@ -97,6 +105,7 @@ export default {
   },
   components: {
     RenderedPost,
+    ScrollToComponent,
   },
   data() {
     return {
@@ -123,6 +132,7 @@ export default {
     setNewPage(page) {
       this.currentPage = page;
       this.setRenderedPosts();
+      this.scroll();
     },
     async setProject() {
       this.project = await this.getProjectById(this.projectId);
@@ -154,6 +164,9 @@ export default {
 
       return [renderedPosts, totalPages];
     },
+    scroll() {
+      this.$refs.topOfPage.scrollTo();
+    }
   }
 };
 </script>
