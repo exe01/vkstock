@@ -150,9 +150,12 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 				if vkComment.ReplyToComment != 0 {
 					commentToReply, err := c.getVKCommentById(ownerId, vkComment.ReplyToComment)
 					if err != nil {
+						log.Printf("Error comment %d for post %d from group %s is not returned",
+							vkComment.ReplyToComment, vkPost.Id, ownerId)
 						log.Print(err)
 					} else {
 						comment.RefText = commentToReply.Text
+						comment.RefText = deleteRefToUserFromText(comment.RefText)
 					}
 
 					comment.Text = deleteRefToUserFromText(comment.Text)
@@ -400,7 +403,7 @@ func convertVKComment(vkComment VKComment) models.Comment {
 }
 
 func deleteRefToUserFromText(text string) string {
-	re, err := regexp.Compile(`\[id\d+\|[а-яА-Яa-zA-Z0-9]+], `)
+	re, err := regexp.Compile(`\[id\d+\|[а-яА-Яa-zA-Z0-9ё]+], *`)
 	if err != nil {
 		return text
 	}

@@ -1,10 +1,8 @@
 package backend_api
 
 import (
-	"bytes"
-	"fmt"
 	"io"
-	"mime/multipart"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -66,6 +64,8 @@ func (api *StockAPI) SavePost(post models.Post) (models.Post, error) {
 		comment.PostId = savedPost.Id
 		savedComment, err := api.saveComment(comment)
 		if err != nil {
+			log.Printf("Error while saved comment of post %d", post.Id)
+			log.Print(err)
 			continue
 		}
 		savedComments = append(savedComments, savedComment)
@@ -103,38 +103,6 @@ func (api *StockAPI) savePost(post models.Post) (models.Post, error) {
 	return savedPost, nil
 }
 
-func (api *StockAPI) saveComment(comment models.Comment) (models.Comment, error) {
-	var savedComment models.Comment
-
-	commentWithoutImage := models.CommentWithoutImage{
-		Username: comment.Username,
-		Text:     comment.Text,
-		PostId:   comment.PostId,
-		RefText:  comment.RefText,
-		Rating:   comment.Rating,
-	}
-
-	resp, err := api.SaveModel("comments", commentWithoutImage)
-	if err != nil {
-		return comment, nil
-	}
-
-	err = utils.ParseResponseBody(resp, &savedComment)
-	if err != nil {
-		return comment, err
-	}
-
-	if len(comment.Image) != 0 {
-		patchedComment, err := api.downloadAndPatchCommentImage(savedComment.Id, comment.Image)
-		if err != nil {
-			return savedComment, nil
-		}
-		savedComment.Image = patchedComment.Image
-	}
-
-	return savedComment, nil
-}
-
 func (api *StockAPI) downloadAndSavePostImage(image models.PostImage) (models.PostImage, error) {
 	var savedImage models.PostImage
 
@@ -154,57 +122,6 @@ func (api *StockAPI) downloadAndSavePostImage(image models.PostImage) (models.Po
 	}
 
 	return savedImage, nil
-}
-
-func (api *StockAPI) downloadAndPatchCommentImage(commentId int, imageUrl string) (models.Comment, error) {
-	var patchedComment models.Comment
-
-	downloadedImg, format, err := utils.DownloadImage(imageUrl)
-	if err != nil {
-		return patchedComment, err
-	}
-
-	body, contType, err := api.createImageBody(downloadedImg, "id", commentId, format)
-	if err != nil {
-		return patchedComment, err
-	}
-
-	patchedComment, err = api.patchCommentImage(commentId, body, contType)
-	if err != nil {
-		return patchedComment, err
-	}
-
-	return patchedComment, nil
-}
-
-
-func (api *StockAPI) createImageBody(image io.Reader, idName string, id int, format string) (io.Reader, string, error) {
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	part, err := writer.CreateFormFile("image", "stockApiLoader."+format)
-	if err != nil {
-		return nil, "", err
-	}
-
-	_, err = io.Copy(part, image)
-	if err != nil {
-		return nil, "", err
-	}
-
-	err = writer.WriteField(idName, strconv.Itoa(id))
-	if err != nil {
-		return nil, "", err
-	}
-
-	err = writer.Close()
-	if err != nil {
-		return nil, "", err
-	}
-
-	contentType := writer.FormDataContentType()
-
-	return body, contentType, nil
 }
 
 func (api *StockAPI) savePostImage(body io.Reader, contentType string) (models.PostImage, error) {
@@ -228,27 +145,4 @@ func (api *StockAPI) savePostImage(body io.Reader, contentType string) (models.P
 	}
 
 	return image, nil
-}
-
-func (api *StockAPI) patchCommentImage(commentId int, body io.Reader, contentType string) (models.Comment, error) {
-	var patchedComment models.Comment
-
-	imageURL := fmt.Sprintf("%s/comments/%d/", api.URL, commentId)
-	req, err := http.NewRequest("PATCH", imageURL, body)
-	if err != nil {
-		return patchedComment, err
-	}
-	req.Header.Add("Content-Type", contentType)
-
-	resp, err := api.client.Do(req)
-	if err != nil {
-		return patchedComment, err
-	}
-
-	err = utils.ParseResponseBody(resp, &patchedComment)
-	if err != nil {
-		return patchedComment, err
-	}
-
-	return patchedComment, nil
 }

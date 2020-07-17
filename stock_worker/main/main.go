@@ -15,44 +15,52 @@ import (
 
 func main() {
 	stockAPI := backend_api.NewStockAPI("http://backend:8000", "1.0")
+	finished := make(chan bool)
 
-	postPosts(stockAPI, 0, 30)
-	//
-	//posts := getNewPosts(stockAPI)
-	//for _, post := range posts {
-	//	savedPost, err := stockAPI.SavePost(post)
-	//	if err != nil {
-	//		log.Print(err)
-	//		continue
-	//	}
-	//
-	//	_, err = stockAPI.RenderPost(savedPost.Id)
-	//	if err != nil {
-	//		log.Print(err)
-	//	}
-	//}
+	go postPosts(stockAPI, 1, 30, finished)
+	go collectPosts(stockAPI, 10, finished)
+
+	<- finished
+	<- finished
 }
 
-func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minutesBetweenPosts int64) {
-	vkRequester := requester.NewVKRequester(
-		"125433e8125433e8125433e8b91226a08111254125433e84cb77682426af7c6780f2899",
-		"17fbc948d00e2e6952b404a8b5523f74468dfea47c6c30d4f55428aae34dfb6eb3c66b16dff263ed10deb",
-		"5.52",
-	)
-	vkPostBuilder := builder.NewVKPostBuilder(vkRequester)
-	vkPostPublisher := publisher.NewVKPublisher(vkRequester)
+func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted time.Duration,
+	minutesBetweenPosts int64, finished chan bool) {
+	firstRunning := true
 
 	for {
+		if !firstRunning {
+			time.Sleep(timeOfCheckingAccepted * time.Minute)
+		}
+		firstRunning = false
+
+		log.Println("Begin publish work")
+
 		projects, err := stockAPI.GetProjects(nil)
 		if err != nil {
 			log.Println("Error while getting project:")
 			log.Println(err)
+			continue
 		}
 
 		for _, project := range projects  {
 			if project.PlatformId == "" {
 				continue
 			}
+			projectType, err := stockAPI.GetTypeById(project.TypeId)
+			if err != nil {
+				log.Println("Error while getting type:")
+				log.Println(err)
+				continue
+			}
+
+			vkRequester := requester.NewVKRequester(
+				projectType.Token,
+				project.Token,
+				"5.52",
+			)
+			vkPostBuilder := builder.NewVKPostBuilder(vkRequester)
+			vkPostPublisher := publisher.NewVKPublisher(vkRequester)
 
 			lastPostedPost, err := stockAPI.GetLastPostedPost(project.Id)
 			if err != nil {
@@ -66,6 +74,8 @@ func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minut
 				if err != nil {
 					continue
 				}
+				log.Printf("Try to prepare post %d from project %s for publishing in platform %s",
+					acceptedPost.Id, project.Name, project.PlatformId)
 
 				vkPostBuilder.Reset()
 				vkPostBuilder.FromGroup(true)
@@ -82,12 +92,14 @@ func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minut
 					}
 				}
 
-				buildedPost := vkPostBuilder.GetPost()
-				publishedPostId, err := vkPostPublisher.Post("-"+project.PlatformId, buildedPost)
+				builtPost := vkPostBuilder.GetPost()
+				publishedPostId, err := vkPostPublisher.Post("-"+project.PlatformId, builtPost)
 				if err != nil {
 					log.Print(err)
 					continue
 				}
+
+				log.Printf("Post %d was successed published. Platform id - %d", acceptedPost.Id, publishedPostId)
 
 				acceptedPost.PlatformId = strconv.Itoa(publishedPostId)
 				acceptedPost.Status = "PO"
@@ -97,19 +109,56 @@ func postPosts(stockAPI *backend_api.StockAPI, timeOfCheckingAccepted int, minut
 					log.Print(err)
 				}
 
-				log.Printf("Published post %d in %d", savedPenderedPost.Id, project.Id)
+				log.Printf("Post %d was updated from AC to PO", savedPenderedPost.Id)
+			}
+		}
+		log.Println("All project checked")
+	}
+
+	finished <- true
+}
+
+func collectPosts(stockAPI *backend_api.StockAPI, timeOfCheckingNewPosts time.Duration,
+	finished chan bool) {
+
+	firstRunning := true
+
+	for {
+		if !firstRunning {
+			time.Sleep(timeOfCheckingNewPosts * time.Minute)
+		}
+		firstRunning = false
+
+		log.Println("Begin collecting work")
+
+		posts := getNewPosts(stockAPI)
+		for _, post := range posts {
+			savedPost, err := stockAPI.SavePost(post)
+			if err != nil {
+				log.Printf("Error while save post")
+				log.Print(err)
+				continue
+			}
+
+			_, err = stockAPI.RenderPost(savedPost.Id)
+			if err != nil {
+				log.Printf("Error while render post %d", savedPost.Id)
+				log.Print(err)
 			}
 		}
 
-		break
+		log.Println("Collecting ended")
 	}
+
+	finished <- true
 }
 
 func getNewPosts(stockAPI *backend_api.StockAPI) []models.Post {
 	newPosts := make([]models.Post, 0, 20)
 	sources, err := stockAPI.GetSources(nil)
 	if err !=nil {
-		log.Panic(err)
+		log.Println("Error while got sources")
+		log.Print(err)
 	}
 
 	for _, source := range sources {
@@ -117,7 +166,9 @@ func getNewPosts(stockAPI *backend_api.StockAPI) []models.Post {
 
 		type_, err := stockAPI.GetTypeById(source.TypeId)
 		if err != nil {
-			log.Panic(err)
+			log.Printf("Error while got type %s", source.TypeId)
+			log.Print(err)
+			continue
 		}
 
 		newSourcePosts := make([]models.Post, 0, 20)
@@ -125,7 +176,9 @@ func getNewPosts(stockAPI *backend_api.StockAPI) []models.Post {
 			case "vk_group": {
 				project, err := stockAPI.GetProjectById(source.ProjectId)
 				if err != nil {
-					log.Panic(err)
+					log.Printf("Error while got project %s", source.ProjectId)
+					log.Print(err)
+					continue
 				}
 
 				vkRequester := requester.NewVKRequester(
@@ -143,10 +196,13 @@ func getNewPosts(stockAPI *backend_api.StockAPI) []models.Post {
 					lastPostPlatformId, _ = strconv.Atoi(post.PlatformId)
 				}
 
+				log.Printf("Try to collect posts from %s", source.Name)
+
 				ownerId := "-" + source.PlatformId
 				newSourcePosts, err = vkCollector.GetPosts(ownerId, lastPostPlatformId)
 				if err != nil {
-					log.Panic(err)
+					log.Printf("Error while got posts %s", source.Name)
+					log.Print(err)
 				}
 			}
 		}
