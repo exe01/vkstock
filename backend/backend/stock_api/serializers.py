@@ -15,13 +15,14 @@ from rest_framework import serializers
 class ImageRepresentationModelSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        request = self.context['request']
 
-        api_url = request.query_params.get('media_url')
-        if api_url:
-            if not api_url.endswith('/'):
-                api_url += '/'
-            ret['image'] = api_url + ret['image']
+        request = self.context.get('request')
+        if request and ret.get('image'):
+            api_url = request.query_params.get('media_url')
+            if api_url:
+                if not api_url.endswith('/'):
+                    api_url += '/'
+                ret['image'] = api_url + ret['image']
 
         return ret
 
@@ -57,7 +58,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
 
 class PostImageSerializer(ImageRepresentationModelSerializer):
-    image = serializers.ImageField(use_url=False)
+    image = serializers.ImageField(use_url=False, required=False)
 
     class Meta:
         model = PostImage
@@ -65,7 +66,7 @@ class PostImageSerializer(ImageRepresentationModelSerializer):
 
 
 class CommentSerializer(ImageRepresentationModelSerializer):
-    image = serializers.ImageField(use_url=False)
+    image = serializers.ImageField(use_url=False, required=False)
 
     class Meta:
         model = Comment
@@ -82,7 +83,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class RenderedImageSerializer(ImageRepresentationModelSerializer):
-    image = serializers.ImageField(use_url=False)
+    image = serializers.ImageField(use_url=False, required=False)
 
     class Meta:
         model = RenderedImage

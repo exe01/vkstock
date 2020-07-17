@@ -3,89 +3,101 @@ from pathlib import Path
 import random
 import string
 import textwrap
+import re
 
 
 class ImageBuilder:
     FONT_POINTS = 40
     SYMBOL_WIDTH = 22
 
-    def build(self, original_img,
-              text='', width=800,
-              text_margin=30, text_location='top',
-              font_name='anonymouspro.ttf', comment_img=None):
+    _image = None
 
-        resized_original_img = self.resize_img_by_width(original_img, width)
-        main_img_width, main_img_height = resized_original_img.size
+    def reset(self, width=800):
+        self._image = Image.new('RGB', (width, 1), color="white")
 
-        if len(text) == 0 and comment_img is None:
-            return resized_original_img
+    def build(self, format='jpeg'):
+        self._image.format = format
+        return self._image
 
-        comment_back = Image.new('RGB', (main_img_width, 1), color="white")
+    def add_text(self, text, text_margin=30, font_name='anonymouspro.ttf', align='left', center=True):
+        if text == '':
+            return
 
-        if len(text) != 0:
-            comment_back = self._add_text_to_pattern(comment_back, text, font_name, text_margin)
+        font = ImageFont.truetype('fonts/' + font_name, self.FONT_POINTS)
+        text_width = self._image.width - 2 * text_margin
+        symbols_per_line = text_width / self.SYMBOL_WIDTH
+        text = self._separate_text_by_lines(text, symbols_per_line)
+        real_width, real_height = self._textsize(text, font)
+        full_text_block_height = real_height + 2 * text_margin
 
-        if comment_img is not None:
-            comment_back = self._add_img_to_pattern(comment_back, comment_img)
+        background_of_text = Image.new('RGB', (real_width, real_height), color="white")
+        background_of_text_drawer = ImageDraw.Draw(background_of_text)
+        background_of_text_drawer.multiline_text(
+            (0, 0),
+            text,
+            fill=(0, 0, 0),
+            font=font,
+            align=align
+        )
 
-        if text_location == 'top':
-            result_img = self.vertically_concatenate_images(comment_back, resized_original_img)
+        if center:
+            background_of_text = self._center(background_of_text,
+                                              self._image.width,
+                                              margin_top=text_margin,
+                                              margin_bot=text_margin)
         else:
-            # 'bottom'
-            result_img = self.vertically_concatenate_images(resized_original_img, comment_back)
+            background_of_text = self._left(background_of_text,
+                                            self._image.width,
+                                            margin_left=text_margin,
+                                            margin_top=text_margin,
+                                            margin_bot=text_margin)
 
-        return result_img
+        self.vertically_concatenate_image(background_of_text)
 
-    def resize_img_by_width(self, img, width: int):
+    def add_image(self, image, width=800, center=True, margin=30):
+        if image is None:
+            return
+
+        resized_img = self._resize_img_by_width(image, width)
+        if center:
+            resized_img = self._center(resized_img,
+                                       self._image.width,
+                                       margin_top=margin,
+                                       margin_bot=margin)
+
+        self.vertically_concatenate_image(resized_img)
+
+    def vertically_concatenate_image(self, img):
+        result_img = Image.new(
+            'RGB',
+            (self._image.width, self._image.height + img.height),
+            color="white",
+        )
+        result_img.paste(
+            self._image,
+            (0, 0)
+        )
+        result_img.paste(
+            img,
+            (0, self._image.height)
+        )
+        self._image = result_img
+
+    def _resize_img_by_width(self, img, width: int):
         orig_width, orig_height = img.size
         scale_factor = orig_width / width
         height = int(orig_height / scale_factor)
         resized_img = img.resize((width, height))
         return resized_img
 
-    def _add_text_to_pattern(self, comment_back, text, font_name, text_margin):
-        font = ImageFont.truetype('fonts/' + font_name, self.FONT_POINTS)
-        text_width = comment_back.width - 2 * text_margin
-        symbols_per_line = text_width / self.SYMBOL_WIDTH
-        text = self.separate_text_by_lines(text, symbols_per_line)
-        _, text_height = self.textsize(text, font)
-
-        full_text_block_height = text_height + 2 * text_margin
-
-        background_of_text = Image.new('RGB', (comment_back.width, full_text_block_height), color="white")
-        background_of_text_drawer = ImageDraw.Draw(background_of_text)
-
-        background_of_text_drawer.multiline_text(
-            (text_margin, text_margin),
-            text,
-            fill=(0, 0, 0),
-            font=font,
-        )
-
-        return self.vertically_concatenate_images(comment_back, background_of_text)
-
-    def _add_img_to_pattern(self, comment_back, img):
-        img_width = int(comment_back.width / 1.5)
-        resized_img = self.resize_img_by_width(img, img_width)
-
-        background_of_img = Image.new('RGB', (comment_back.width, resized_img.height), color="white")
-        imx_x = (comment_back.width - resized_img.width) / 2
-        imx_x = int(imx_x)
-
-        background_of_img.paste(resized_img, (imx_x, 0))
-        return self.vertically_concatenate_images(comment_back, background_of_img)
-
-    def textsize(self, text, font):
-        """
-        :param text:
-        :param font:
-        :return: max width, max_height
-        """
-        test_img = Image.new('RGB', (10, 10), color="white")
+    def _textsize(self, text, font):
+        test_img = Image.new('RGB', (1, 1), color="white")
         test_img_driwer = ImageDraw.Draw(test_img)
-        return test_img_driwer.multiline_textsize(text, font=font)
+        width, height = test_img_driwer.multiline_textsize(text, font=font)
+        height += 10 # serif
+        return width, height
 
-    def separate_text_by_lines(self, text, symbols_per_line):
+    def _separate_text_by_lines(self, text, symbols_per_line):
         paragraphs = text.split('\n')
         new_paragraphs = []
 
@@ -96,22 +108,23 @@ class ImageBuilder:
 
         return '\n'.join(new_paragraphs)
 
-    def vertically_concatenate_images(self, img1, img2):
-        result_img = Image.new(
-            'RGB',
-            (img1.width, img1.height+img2.height),
-            color="white",
-        )
-        result_img.paste(
-            img1,
-            (0, 0)
-        )
-        result_img.paste(
-            img2,
-            (0, img1.height)
-        )
+    def _center(self, img, width, margin_top=0, margin_bot=0):
+        centered_img = Image.new('RGB', (width, img.height+margin_bot+margin_top), color="white")
+        img_x = (width - img.width) / 2
+        img_x = int(img_x)
 
-        return result_img
+        if img_x < 0:
+            centered_img.paste(img, (0, margin_top))
+        else:
+            centered_img.paste(img, (img_x, margin_top))
+
+        return centered_img
+
+    def _left(self, img, width, margin_left=0, margin_top=0, margin_bot=0):
+        centered_img = Image.new('RGB', (width, img.height+margin_bot+margin_top), color="white")
+        centered_img.paste(img, (margin_left, margin_top))
+        return centered_img
+
 
 class TextBuilder:
     def format_text(self, text, ref_text='', wrapper='*'):
@@ -151,3 +164,17 @@ class TextBuilder:
             random_name += '.'+format.lower()
 
         return random_name
+
+    def delete_emoji(self, text):
+        try:
+            emoji_pattern = re.compile("["
+                                       u"\U0001F600-\U0001F64F"  # emoticons
+                                       u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                                       u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                                       u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                                       u"\U00002702-\U000027B0"
+                                       u"\U000024C2-\U0001F251"
+                                       "]+", flags=re.UNICODE)
+            return emoji_pattern.sub(r'', text)
+        except:
+            return text

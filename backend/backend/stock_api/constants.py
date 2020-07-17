@@ -11,17 +11,18 @@ AS_ORIGINAL = 'as_original'
 AUTO = 'auto'
 
 FONT = 'font'
-
 IMG = 'img'
+IMG_WIDTH = 'img_width'
 IMG_COUNT = 'img_count'
+
 IMG_WITH_TEXT = 'img_with_text'
-IMG_WITH_IMG = 'img_with_img'
-IMG_TEXT_FROM = 'img_text_from'
-IMG_TEXT_ORIGINAL = 'original'
-IMG_TEXT_COMMENT = 'comment'
+
+IMG_WITH_ORIGINAL_TEXT = 'img_text_with_original_text'
+IMG_WITH_POST_IMG = 'img_with_post_img'
 IMG_COMMENT_ID = 'img_comment_id'
-IMG_TEXT_LOCATION = 'img_text_location'
-IMG_TEXT_WITH_REF = 'img_text_with_ref'
-IMG_TEXT_WITH_COMMENT_IMG = 'img_text_with_comment_img'
+IMG_WITH_COMMENT_TEXT = 'img_with_comment_text'
+IMG_COMMENT_TEXT_WITH_REF = 'img_comment_text_with_ref'
+IMG_COMMENT_WITH_IMG = 'img_comment_with_img'
+
 BOTTOM = 'bottom'
 TOP = 'top'

@@ -169,24 +169,18 @@ class RenderPost(APIView):
         post_config[AUTO] = data.get(AUTO, 1)
 
         post_config[FONT] = data.get(FONT, 'anonymouspro.ttf')
-
         post_config[IMG] = data.get(IMG, 1)
+        post_config[IMG_WIDTH] = data.get(IMG_WIDTH, 800)
         post_config[IMG_COUNT] = data.get(IMG_COUNT, 1)
 
         post_config[IMG_WITH_TEXT] = data.get(IMG_WITH_TEXT, 1)
-        post_config[IMG_WITH_IMG] = data.get(IMG_WITH_IMG, 1)
 
-        # comment/original
-        post_config[IMG_TEXT_FROM] = data.get(IMG_TEXT_FROM, IMG_TEXT_COMMENT)
-
-        if post_config[IMG_TEXT_FROM] == IMG_TEXT_COMMENT:
-            # comment_id/comment with the biggest rating
-            post_config[IMG_COMMENT_ID] = data.get(IMG_COMMENT_ID)
-
-        # bottom/top
-        post_config[IMG_TEXT_LOCATION] = data.get(IMG_TEXT_LOCATION, BOTTOM)
-        post_config[IMG_TEXT_WITH_REF] = data.get(IMG_TEXT_WITH_REF, 1)
-        post_config[IMG_TEXT_WITH_COMMENT_IMG] = data.get(IMG_TEXT_WITH_COMMENT_IMG, 1)
+        post_config[IMG_WITH_ORIGINAL_TEXT] = data.get(IMG_WITH_ORIGINAL_TEXT, 1)
+        post_config[IMG_WITH_POST_IMG] = data.get(IMG_WITH_POST_IMG, 1)
+        post_config[IMG_COMMENT_ID] = data.get(IMG_COMMENT_ID, None)
+        post_config[IMG_WITH_COMMENT_TEXT] = data.get(IMG_WITH_COMMENT_TEXT, 1)
+        post_config[IMG_COMMENT_TEXT_WITH_REF] = data.get(IMG_COMMENT_TEXT_WITH_REF, 1)
+        post_config[IMG_COMMENT_WITH_IMG] = data.get(IMG_COMMENT_WITH_IMG, 1)
 
         return post_config
 
@@ -227,70 +221,49 @@ class RenderPost(APIView):
                 self._add_original_images(rendered_post, original_post, IMG_COUNT)
                 return rendered_post
 
-            image_text = ''
-            image_text_from_post = False
-            comment = None
-            if post_config[IMG_WITH_TEXT] == 1:
-                if post_config[IMG_TEXT_FROM] == IMG_TEXT_ORIGINAL:
-                    image_text = self.text_builder.format_text(original_post.text)
-                    image_text_from_post = True
-                if post_config[IMG_TEXT_FROM] == IMG_TEXT_COMMENT:
-                    if post_config[IMG_COMMENT_ID] is not None:
-                        comment_id = post_config[IMG_COMMENT_ID]
-                        comment = Comment.objects.get(id=comment_id)
-                    else:
-                        original_comments = original_post.comments.all().order_by('-rating')
-                        if len(original_comments) > 0:
-                            comment = original_comments[0]
+            width = post_config[IMG_WIDTH]
 
-                    if comment:
-                        if post_config[IMG_TEXT_WITH_REF]:
-                            image_text = self.text_builder.format_text(comment.text, comment.ref_text)
-                        else:
-                            image_text = self.text_builder.format_text(comment.text)
-                    elif post_config[AUTO] == 1:
-                        image_text = self.text_builder.format_text(original_post.text)
+            original_text = original_post.text
+            original_text = self.text_builder.delete_emoji(original_text)
+            comment_text, comment = self._build_comment_text(original_post, post_config)
+            comment_text = self.text_builder.delete_emoji(comment_text)
 
-            width = 800
-
-            # TODO delete image hardcode !!
-            pil_img = Image.new('RGB', (1000, 1), color="white")
-            pil_img.format = 'jpeg'
-            if post_config[IMG_WITH_IMG] == 1:
-                original_images = original_post.images.all()
-                if len(original_images) > 0:
-                    image = original_images[0]
-                    image.image.open()
-                    pil_img = Image.open(image.image)
-                elif post_config[AUTO] == 1 and image_text_from_post is False:
-                    width = 1000
-                    image_text = self.text_builder.format_text(image_text, original_post.text, wrapper='')
-
-            if image_text_from_post and post_config[AUTO]:
-                text_location = TOP
-            else:
-                text_location = post_config[IMG_TEXT_LOCATION]
+            post_img = None
+            post_images = original_post.images.all()
+            if len(post_images) > 0:
+                image = post_images[0]
+                image.image.open()
+                post_img = Image.open(image.image)
 
             comment_img = None
-            if post_config[IMG_TEXT_WITH_COMMENT_IMG] == 1 and comment is not None:
-                if comment is not None:
-                    try:
-                        comment.image.open()
-                        comment_img = Image.open(comment.image)
-                    except ValueError:
-                        pass
+            if comment is not None:
+                try:
+                    comment.image.open()
+                    comment_img = Image.open(comment.image)
+                except ValueError:
+                    pass
 
-            rendered_pil_img = self.image_builder.build(
-                pil_img,
-                text=image_text,
-                text_location=text_location,
-                font_name=post_config[FONT],
-                comment_img=comment_img,
-                width=width
-            )
+            if post_config[AUTO] and post_img is None and comment_img is None:
+                width = 1000
+
+            self.image_builder.reset(width=width)
+
+            if post_config[IMG_WITH_ORIGINAL_TEXT]:
+                self.image_builder.add_text(original_text)
+
+            if post_config[IMG_WITH_POST_IMG]:
+                self.image_builder.add_image(post_img)
+
+            if post_config[IMG_WITH_COMMENT_TEXT]:
+                self.image_builder.add_text(comment_text)
+
+            if post_config[IMG_COMMENT_WITH_IMG]:
+                self.image_builder.add_image(comment_img, width=400)
+
+            rendered_img = self.image_builder.build()
 
             img_reader = io.BytesIO()
-            rendered_pil_img.save(img_reader, format=pil_img.format)
+            rendered_img.save(img_reader, format=rendered_img.format)
 
             rendered_post.save()
 
@@ -298,7 +271,7 @@ class RenderPost(APIView):
                 rendered_post_id=rendered_post
             )
             img_of_rendered_post.image.save(
-                self.text_builder.get_random_name(format=pil_img.format),
+                self.text_builder.get_random_name(format=rendered_img.format),
                 File(img_reader)
             )
             img_of_rendered_post.save()
@@ -307,6 +280,25 @@ class RenderPost(APIView):
         else:
             rendered_post.save()
             return rendered_post
+
+    def _build_comment_text(self, original_post, post_config):
+        image_text = ''
+        comment = None
+        if post_config[IMG_COMMENT_ID] is not None:
+            comment_id = post_config[IMG_COMMENT_ID]
+            comment = Comment.objects.get(id=comment_id)
+        else:
+            original_comments = original_post.comments.all().order_by('-rating')
+            if len(original_comments) > 0:
+                comment = original_comments[0]
+
+        if comment:
+            if post_config[IMG_COMMENT_TEXT_WITH_REF]:
+                image_text = self.text_builder.format_text(comment.text, comment.ref_text)
+            else:
+                image_text = self.text_builder.format_text(comment.text)
+
+        return image_text, comment
 
     def _create_post_as_original(self, rendered_post, original_post):
         rendered_post.text = original_post.text

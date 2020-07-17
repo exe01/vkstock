@@ -2,11 +2,11 @@ FROM python:3.6
 
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /app
-COPY ./ /app
+WORKDIR /backend
+COPY ./ /backend
 
 RUN pip install -r requirements.txt
 
-ENV DJANGO_MEDIA_ROOT '/app/media/'
+ENV DJANGO_MEDIA_ROOT '/backend/media/'
 
 CMD python manage.py runserver 0.0.0.0:8000
