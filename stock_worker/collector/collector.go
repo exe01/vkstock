@@ -133,7 +133,7 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 				break
 			}
 
-			if vkPost.Id < lastRecordId {
+			if vkPost.Id <= lastRecordId {
 				gettingPosts = false
 				break
 			}
