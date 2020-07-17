@@ -6,12 +6,11 @@ WORKDIR /app
 RUN npm install -g @vue/cli@3.10.0
 
 # Install the application's dependencies into the node_modules's cache directory.
-COPY ./frontend/package.json ./
-COPY ./frontend/package-lock.json ./
+COPY ./package.json ./
 RUN npm install
 
 #WORKDIR /app
-COPY ./frontend /app
+COPY ./ /app
 
 RUN npm run build
 
