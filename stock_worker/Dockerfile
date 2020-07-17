@@ -4,6 +4,8 @@ ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux
 
+RUN apk --no-cache add ca-certificates
+
 WORKDIR /usr/local/go/src/vkstock/stock_worker
 
 # Copy and download dependency using go mod
@@ -27,6 +29,7 @@ RUN cp /usr/local/go/src/vkstock/stock_worker/app .
 # Build a small image
 FROM scratch
 
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /dist/app /
 
 
