@@ -6,6 +6,14 @@ import (
 )
 
 func (api *StockAPI) GetSources(params map[string]string) ([]models.Source, error) {
+	if params == nil {
+		params = map[string]string {
+			"count": "100",
+		}
+	} else {
+		params["count"] = "100"
+	}
+
 	resp, err := api.GetModels("sources", params)
 	if err != nil {
 		return nil, err
