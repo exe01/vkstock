@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable vue/max-attributes-per-line */
 /* eslint-disable vue/singleline-html-element-content-newline */
 <template>
@@ -62,12 +63,24 @@
               />
             </v-flex>
             <v-flex xs11>
-              <p class="mb-0 subheading">{{ originalPost.text }}</p>
+              <v-textarea
+                auto-grow
+                rows="1"
+                v-model="originalPost.text"
+                @change="originalPostTextChanged = true"
+              />
             </v-flex>
           </v-layout>
 
-          <v-layout>
-            <v-flex xs12>
+          <v-layout
+            align-center
+          >
+            <v-flex xs1>
+              <v-checkbox
+                v-model="selectedOriginalImage"
+              />
+            </v-flex>
+            <v-flex xs11>
               <post-images
                 :links="formatImgLinks(originalPost.images || [])"
                 width="300"
@@ -88,7 +101,19 @@
               />
             </v-flex>
             <v-flex xs11>
-              <p class="mb-0 subheading">{{ formatCommentText(comment) }}</p>
+              <v-textarea
+                v-if="comment.ref_text != ''"
+                auto-grow
+                rows="1"
+                v-model="comment.ref_text"
+                @change="changedComments[comment.id] = true"
+              />
+              <v-textarea
+                auto-grow
+                rows="1"
+                v-model="comment.text"
+                @change="changedComments[comment.id] = true"
+              />
               <v-img
                 max-width="300"
                 v-if="comment.image"
@@ -127,10 +152,13 @@ export default {
     return {
       settingDialog: false,
       originalPost: {},
-      checkboxModel: false,
+      originalPostTextChanged: false,
+
+      changedComments: {},
 
       selectedComments: {},
       selectedOriginalText: true,
+      selectedOriginalImage: true,
     };
   },
   methods: {
@@ -143,6 +171,29 @@ export default {
       const originalPost = resp.data;
       originalPost.images = originalPost.images || [];
       return originalPost;
+    },
+    async updateOriginalPost() {
+      const { id } = this.originalPost;
+
+      const resp = await this.$axios.patch(`/api/1.0/posts/${id}/`, {
+        text: this.originalPost.text,
+      });
+
+      if (resp.status === 200) {
+        console.log('Original post was updated');
+      }
+    },
+    async updateComment(comment) {
+      const { id } = comment;
+
+      const resp = await this.$axios.patch(`/api/1.0/comments/${id}/`, {
+        text: comment.text,
+        ref_text: comment.ref_text
+      });
+
+      if (resp.status === 200) {
+        console.log(`Comment ${id} was updated`);
+      }
     },
     async getRenderedPost(postId) {
       const resp = await this.$axios.get(`/api/1.0/rendered_posts/${postId}`);
@@ -181,6 +232,21 @@ export default {
       this.post = await this.getRenderedPost(resp.data.id);
     },
     async rerendPost() {
+      if (this.originalPostTextChanged) {
+        await this.updateOriginalPost();
+        this.originalPostTextChanged = false;
+      }
+      // eslint-disable-next-line no-restricted-syntax
+      for (let commentId in this.changedComments) {
+        if (this.changedComments[commentId] === true) {
+          this.changedComments[commentId] = false;
+          commentId = Number(commentId);
+          const comment = this.originalPost.comments.find((c) => c.id === commentId);
+          // eslint-disable-next-line no-await-in-loop
+          await this.updateComment(comment);
+        }
+      }
+
       const config = {
         rendered_post_id: this.post.id,
         replace: 1,
@@ -192,17 +258,23 @@ export default {
         config.img_text_with_original_text = 0;
       }
 
+      if (this.selectedOriginalImage) {
+        config.img_with_post_img = 1;
+      } else {
+        config.img_with_post_img = 0;
+      }
+
       // eslint-disable-next-line no-restricted-syntax
-      for (const key in this.selectedComments) {
-        if (this.selectedComments[key] === true) {
-          config.img_comment_id = Number(key);
+      for (const commentId in this.selectedComments) {
+        if (this.selectedComments[commentId] === true) {
+          config.img_comment_id = Number(commentId);
           break;
         }
       }
 
       const resp = await this.$axios.post('/api/1.0/render_post', config);
       this.post = await this.getRenderedPost(resp.data.id);
-    }
+    },
   }
 };
 </script>

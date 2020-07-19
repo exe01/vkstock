@@ -19,11 +19,13 @@ class ImageBuilder:
         self._image.format = format
         return self._image
 
-    def add_text(self, text, text_margin=30, font_name='anonymouspro.ttf', align='left', center=True):
+    def add_text(self, text, text_margin=30, font_name='anonymouspro.ttf', align='left', location='center', points=None):
         if text == '':
             return
 
-        font = ImageFont.truetype('fonts/' + font_name, self.FONT_POINTS)
+        points = points if points else self.FONT_POINTS
+
+        font = ImageFont.truetype('fonts/' + font_name, points)
         text_width = self._image.width - 2 * text_margin
         symbols_per_line = text_width / self.SYMBOL_WIDTH
         text = self._separate_text_by_lines(text, symbols_per_line)
@@ -40,30 +42,28 @@ class ImageBuilder:
             align=align
         )
 
-        if center:
-            background_of_text = self._center(background_of_text,
-                                              self._image.width,
-                                              margin_top=text_margin,
-                                              margin_bot=text_margin)
-        else:
-            background_of_text = self._left(background_of_text,
-                                            self._image.width,
-                                            margin_left=text_margin,
-                                            margin_top=text_margin,
-                                            margin_bot=text_margin)
+        background_of_text = self._locate(location,
+                                          background_of_text,
+                                          self._image.width,
+                                          margin_left=text_margin,
+                                          margin_top=text_margin,
+                                          margin_bot=text_margin,
+                                          margin_right=text_margin)
 
         self.vertically_concatenate_image(background_of_text)
 
-    def add_image(self, image, width=800, center=True, margin=30):
+    def add_image(self, image, width=800, location='center', margin=30):
         if image is None:
             return
 
         resized_img = self._resize_img_by_width(image, width)
-        if center:
-            resized_img = self._center(resized_img,
-                                       self._image.width,
-                                       margin_top=margin,
-                                       margin_bot=margin)
+        resized_img = self._locate(location,
+                                   resized_img,
+                                   self._image.width,
+                                   margin_left=margin,
+                                   margin_top=margin,
+                                   margin_bot=margin,
+                                   margin_right=margin)
 
         self.vertically_concatenate_image(resized_img)
 
@@ -108,8 +108,18 @@ class ImageBuilder:
 
         return '\n'.join(new_paragraphs)
 
-    def _center(self, img, width, margin_top=0, margin_bot=0):
-        centered_img = Image.new('RGB', (width, img.height+margin_bot+margin_top), color="white")
+    def _locate(self, location, *args, **kwargs):
+        if location == 'center':
+            return self._center(*args, **kwargs)
+        elif location == 'left':
+            return self._left(*args, **kwargs)
+        elif location == 'right':
+            return self._right(*args, **kwargs)
+
+        return self._left(*args, **kwargs)
+
+    def _center(self, img, width, margin_top=0, margin_bot=0, margin_left=0, margin_right=0):
+        centered_img = Image.new('RGB', (width, img.height + margin_bot + margin_top), color="white")
         img_x = (width - img.width) / 2
         img_x = int(img_x)
 
@@ -120,10 +130,23 @@ class ImageBuilder:
 
         return centered_img
 
-    def _left(self, img, width, margin_left=0, margin_top=0, margin_bot=0):
-        centered_img = Image.new('RGB', (width, img.height+margin_bot+margin_top), color="white")
-        centered_img.paste(img, (margin_left, margin_top))
-        return centered_img
+    def _left(self, img, width, margin_top=0, margin_bot=0, margin_left=0, margin_right=0):
+        left_img = Image.new('RGB', (width, img.height + margin_bot + margin_top), color="white")
+        left_img.paste(img, (margin_left, margin_top))
+        return left_img
+
+    def _right(self, img, width, margin_top=0, margin_bot=0, margin_left=0, margin_right=0):
+        right_img = Image.new('RGB', (width, img.height + margin_bot + margin_top), color="white")
+
+        img_x = (width - img.width - margin_right)
+        img_x = int(img_x)
+
+        if img_x < 0:
+            right_img.paste(img, (0, margin_top))
+        else:
+            right_img.paste(img, (img_x, margin_top))
+
+        return right_img
 
 
 class TextBuilder:

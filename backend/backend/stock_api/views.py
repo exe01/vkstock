@@ -228,20 +228,8 @@ class RenderPost(APIView):
             comment_text, comment = self._build_comment_text(original_post, post_config)
             comment_text = self.text_builder.delete_emoji(comment_text)
 
-            post_img = None
-            post_images = original_post.images.all()
-            if len(post_images) > 0:
-                image = post_images[0]
-                image.image.open()
-                post_img = Image.open(image.image)
-
-            comment_img = None
-            if comment is not None:
-                try:
-                    comment.image.open()
-                    comment_img = Image.open(comment.image)
-                except ValueError:
-                    pass
+            post_img = original_post.get_pillow_first_image()
+            comment_img = comment.get_pillow_image() if comment else None
 
             if post_config[AUTO] and post_img is None and comment_img is None:
                 width = 1000
@@ -259,6 +247,9 @@ class RenderPost(APIView):
 
             if post_config[IMG_COMMENT_WITH_IMG]:
                 self.image_builder.add_image(comment_img, width=400)
+
+            # Add watermark
+            self.image_builder.add_text(project.name, location='right', text_margin=5, points=30)
 
             rendered_img = self.image_builder.build()
 

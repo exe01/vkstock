@@ -11,6 +11,10 @@ AS_ORIGINAL = 'as_original'
 AUTO = 'auto'
 
 FONT = 'font'
+
+TEXT = 'text'
+TEXT_PATTERN = 'text_pattern'
+
 IMG = 'img'
 IMG_WIDTH = 'img_width'
 IMG_COUNT = 'img_count'
