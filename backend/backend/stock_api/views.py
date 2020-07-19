@@ -92,7 +92,7 @@ class RenderedPostViewSet(viewsets.ModelViewSet):
     serializer_class = RenderedPostSerializer
     filterset_fields = ['project_id', 'status']
     ordering_fields = ['posted_date', 'rating']
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
 
 
 class RenderedImageViewSet(viewsets.ModelViewSet):
