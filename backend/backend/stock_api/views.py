@@ -91,6 +91,7 @@ class RenderedPostViewSet(viewsets.ModelViewSet):
     queryset = RenderedPost.objects.all().order_by('-id')
     serializer_class = RenderedPostSerializer
     filterset_fields = ['project_id', 'status']
+    ordering_fields = ['posted_date', 'rating']
     filter_backends = [DjangoFilterBackend]
 
 
