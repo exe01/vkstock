@@ -66,7 +66,7 @@ func (api *StockAPI) GetLastPostedPost(projectId int) (models.RenderedPost, erro
 	params := map[string]string{
 		"count": "1",
 		"status": "PO",
-		"ordering": "-date",
+		"ordering": "-posted_date",
 		"project_id": strconv.Itoa(projectId),
 	}
 
