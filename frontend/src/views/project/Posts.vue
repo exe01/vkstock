@@ -92,6 +92,21 @@
         </div>
       </v-flex>
     </v-layout>
+
+    <!-- Sorting card -->
+    <v-layout>
+      <v-flex>
+        <v-card>
+          <v-card-text>
+            <v-layout>
+              <v-flex>
+                <v-btn block color="#43C1DF" @click="setNewPage(1)">Get posts</v-btn>
+              </v-flex>
+            </v-layout>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+    </v-layout>
   </v-container>
 </template>
 

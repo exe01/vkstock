@@ -1,4 +1,5 @@
 from django.db import models
+from PIL import Image
 
 
 # CHANGE TYPE OF DELETE RENDERED POST
@@ -29,6 +30,16 @@ class Post(models.Model):
     text = models.TextField(blank=True)
     rating = models.IntegerField(default=0)
 
+    def get_pillow_first_image(self):
+        pil_image = None
+        post_images = self.images.all()
+        if len(post_images) > 0:
+            image_model = post_images[0]
+            image_model.image.open()
+            pil_image = Image.open(image_model.image)
+
+        return pil_image
+
 
 class PostImage(models.Model):
     post_id = models.ForeignKey(Post, related_name='images', on_delete=models.CASCADE)
@@ -43,6 +54,15 @@ class Comment(models.Model):
     rating = models.IntegerField(default=0)
     image = models.ImageField(upload_to='comment_images', null=True)
 
+    def get_pillow_image(self):
+        pil_image = None
+        try:
+            self.image.open()
+            pil_image = Image.open(self.image)
+        except ValueError:
+            return None
+
+        return pil_image
 
 class RenderedPost(models.Model):
     STATUS_CHOICES = [
