@@ -193,7 +193,8 @@ func vkPostIsNew(vkPost VKPost) bool {
 
 func vkPostIsOld(vkPost VKPost) bool {
 	nowMinus2Days := utils.NowMinusDaysUnix(2)
-	return nowMinus2Days > vkPost.Date
+
+	return nowMinus2Days > vkPost.Date || vkPost.Date == 0
 }
 
 func (c *VKCollector) getVKPosts(ownerId string, count, offset int) ([]VKPost, error) {
