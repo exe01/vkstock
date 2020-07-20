@@ -247,7 +247,7 @@ class RenderPost(APIView):
                 self.image_builder.add_text(comment_text)
 
             if post_config[IMG_COMMENT_WITH_IMG]:
-                self.image_builder.add_image(comment_img, width=400)
+                self.image_builder.add_image(comment_img, width=600)
 
             # Add watermark
             self.image_builder.add_text(project.name, location='right', text_margin=5, points=30)
