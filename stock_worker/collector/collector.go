@@ -114,7 +114,9 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 	gettingPosts := true
 
 	for i := 0; gettingPosts; i++ {
-		vkPosts, err = c.getVKPosts(ownerId, 10, i*count)
+		offset := i*count
+		log.Printf("Try to get %d posts with offset %d for %s", count, offset, ownerId)
+		vkPosts, err = c.getVKPosts(ownerId, count, offset)
 		if err != nil {
 			return nil, err
 		}
