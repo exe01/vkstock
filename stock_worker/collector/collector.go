@@ -122,6 +122,8 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 		}
 
 		for _, vkPost := range vkPosts {
+			log.Println(vkPost)
+
 			if vkPostIsOld(vkPost) {
 				gettingPosts = false
 				break
