@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"time"
 	"errors"
 	"log"
 	"regexp"
@@ -108,7 +109,7 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 	countOfComments := 2
 	posts := make([]models.Post, 0, 10)
 
-	count := 10
+	count := 100
 	var vkPosts []VKPost
 	var err error
 	gettingPosts := true
@@ -116,6 +117,7 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 	for i := 0; gettingPosts; i++ {
 		offset := i*count
 		log.Printf("Try to get %d posts with offset %d for %s", count, offset, ownerId)
+		time.Sleep(time.Second)
 		vkPosts, err = c.getVKPosts(ownerId, count, offset)
 
 		if len(vkPosts) == 0 {
@@ -247,13 +249,15 @@ func (c *VKCollector) getTopVKComments(ownerId string, postId, countOfTop int) (
 }
 
 func (c *VKCollector) getAllVKComments(ownerId string, postId int) ([]VKComment, error) {
-	count := 50
+	count := 100
 	allComments := make([]VKComment, 0, count)
 	var vkGetCommentsResponse *VKGetCommentsResponse
 	var err error
 
 	for i := 0; ; i++ {
 		vkGetCommentsResponse, err = c.getVKPostComments(ownerId, postId, count, i*count)
+		time.Sleep(time.Second)
+
 		if err != nil {
 			return nil, err
 		}
