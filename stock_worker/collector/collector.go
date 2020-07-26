@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"time"
 	"errors"
 	"log"
 	"regexp"
@@ -108,26 +109,26 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 	countOfComments := 2
 	posts := make([]models.Post, 0, 10)
 
-	count := 10
+	count := 100
 	var vkPosts []VKPost
 	var err error
 	gettingPosts := true
 
 	for i := 0; gettingPosts; i++ {
-		vkPosts, err = c.getVKPosts(ownerId, 10, i*count)
+		offset := i*count
+		log.Printf("Try to get %d posts with offset %d for %s", count, offset, ownerId)
+		time.Sleep(time.Second)
+		vkPosts, err = c.getVKPosts(ownerId, count, offset)
+
+		if len(vkPosts) == 0 {
+			return posts, nil
+		}
+
 		if err != nil {
 			return nil, err
 		}
 
 		for _, vkPost := range vkPosts {
-			if vkPost.MarkedAsAds != 0 || vkPost.IsPinned == 1 {
-				continue
-			}
-
-			if vkPostIsNew(vkPost) {
-				continue
-			}
-
 			if vkPostIsOld(vkPost) {
 				gettingPosts = false
 				break
@@ -136,6 +137,14 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 			if vkPost.Id <= lastRecordId {
 				gettingPosts = false
 				break
+			}
+
+			if vkPost.MarkedAsAds != 0 || vkPost.IsPinned == 1 {
+				continue
+			}
+
+			if vkPostIsNew(vkPost) {
+				continue
 			}
 
 			topVKComments, err := c.getTopVKComments(ownerId, vkPost.Id, countOfComments)
@@ -191,7 +200,8 @@ func vkPostIsNew(vkPost VKPost) bool {
 
 func vkPostIsOld(vkPost VKPost) bool {
 	nowMinus2Days := utils.NowMinusDaysUnix(2)
-	return nowMinus2Days > vkPost.Date
+
+	return nowMinus2Days > vkPost.Date || vkPost.Date == 0
 }
 
 func (c *VKCollector) getVKPosts(ownerId string, count, offset int) ([]VKPost, error) {
@@ -239,13 +249,15 @@ func (c *VKCollector) getTopVKComments(ownerId string, postId, countOfTop int) (
 }
 
 func (c *VKCollector) getAllVKComments(ownerId string, postId int) ([]VKComment, error) {
-	count := 50
+	count := 100
 	allComments := make([]VKComment, 0, count)
 	var vkGetCommentsResponse *VKGetCommentsResponse
 	var err error
 
 	for i := 0; ; i++ {
 		vkGetCommentsResponse, err = c.getVKPostComments(ownerId, postId, count, i*count)
+		time.Sleep(time.Second)
+
 		if err != nil {
 			return nil, err
 		}
