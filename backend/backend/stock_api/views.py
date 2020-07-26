@@ -238,13 +238,15 @@ class RenderPost(APIView):
             self.image_builder.reset(width=width)
 
             if post_config[IMG_WITH_ORIGINAL_TEXT]:
-                self.image_builder.add_text(original_text)
+                censored_original_text = self.text_builder.censor(original_text)
+                self.image_builder.add_text(censored_original_text)
 
             if post_config[IMG_WITH_POST_IMG]:
                 self.image_builder.add_image(post_img)
 
             if post_config[IMG_WITH_COMMENT_TEXT]:
-                self.image_builder.add_text(comment_text)
+                censored_comment_text = self.text_builder.censor(comment_text)
+                self.image_builder.add_text(censored_comment_text)
 
             if post_config[IMG_COMMENT_WITH_IMG]:
                 self.image_builder.add_image(comment_img, width=600)

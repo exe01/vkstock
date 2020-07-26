@@ -1,5 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
-from pathlib import Path
+from backend.stock_api.utils import PartialCensor
 import random
 import string
 import textwrap
@@ -151,8 +151,8 @@ class ImageBuilder:
 
 class TextBuilder:
     def format_text(self, text, ref_text='', wrapper='*'):
-        text = self.up_first_letter(text)
-        ref_text = self.up_first_letter(ref_text)
+        text = text.capitalize()
+        ref_text = ref_text.capitalize()
 
         if len(text) == 0 and len(ref_text) == 0:
             return ''
@@ -170,12 +170,6 @@ class TextBuilder:
 
         return ''
 
-    def up_first_letter(self, text=''):
-        if len(text) > 0:
-            return text[0].upper() + text[1:]
-
-        return text
-
     def wrap_text(self, text, wrapper=''):
         return '{}{}{}'.format(wrapper, text, wrapper)
 
@@ -191,13 +185,28 @@ class TextBuilder:
     def delete_emoji(self, text):
         try:
             emoji_pattern = re.compile("["
-                                       u"\U0001F600-\U0001F64F"  # emoticons
-                                       u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-                                       u"\U0001F680-\U0001F6FF"  # transport & map symbols
-                                       u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                                       u"\U00002702-\U000027B0"
-                                       u"\U000024C2-\U0001F251"
+                                        u"\U0001F600-\U0001F64F"  # emoticons
+                                        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                                        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                                        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                                        u"\U00002500-\U00002BEF"  # chinese char
+                                        u"\U00002702-\U000027B0"
+                                        u"\U00002702-\U000027B0"
+                                        u"\U000024C2-\U0001F251"
+                                        u"\U0001f926-\U0001f937"
+                                        u"\U00010000-\U0010ffff"
+                                        u"\u2640-\u2642" 
+                                        u"\u2600-\u2B55"
+                                        u"\u200d"
+                                        u"\u23cf"
+                                        u"\u23e9"
+                                        u"\u231a"
+                                        u"\ufe0f"  # dingbats
+                                        u"\u3030"
                                        "]+", flags=re.UNICODE)
             return emoji_pattern.sub(r'', text)
         except:
             return text
+
+    def censor(self, text, replace='*'):
+        return PartialCensor.censor(text, repl=replace)

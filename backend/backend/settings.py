@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django_filters',
     'backend.stock_api.apps.VkstockConfig',
     'django_cleanup.apps.CleanupConfig',
+    'djantimat',
 ]
 
 MIDDLEWARE = [

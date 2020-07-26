@@ -6,6 +6,8 @@ WORKDIR /backend
 COPY ./ /backend
 
 RUN pip install -r requirements.txt
+RUN pip install git+git://github.com/arsensokolov/djantimat.git#egg=djantimat
+
 
 ENV DJANGO_MEDIA_ROOT '/backend/media/'
 
