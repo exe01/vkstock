@@ -3,7 +3,6 @@ version: "3"
 services:
   frontend:
     restart: always
-    ports: []
     build:
       context: ./frontend
       dockerfile: Dockerfile-prod
@@ -12,7 +11,6 @@ services:
 
   backend:
     restart: always
-    ports: []
     command: ./entrypoint.sh
 
   stock_worker:

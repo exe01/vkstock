@@ -3,20 +3,16 @@ version: "3"
 services:
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
     volumes:
       - ./backend:/backend
     environment:
       - DEBUG=1
 
   frontend:
-    # logging:
-    #   driver: none
+          #logging:
+            #  driver: none
     build:
       context: ./frontend
-    ports:
-      - "8080:8080"
     volumes:
       - ./frontend:/app
 
