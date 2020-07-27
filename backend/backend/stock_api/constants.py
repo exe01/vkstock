@@ -23,6 +23,7 @@ IMG_WITH_TEXT = 'img_with_text'
 
 IMG_WITH_ORIGINAL_TEXT = 'img_text_with_original_text'
 IMG_WITH_POST_IMG = 'img_with_post_img'
+IMG_WITH_COMMENT = 'img_with_comment'
 IMG_COMMENT_ID = 'img_comment_id'
 IMG_WITH_COMMENT_TEXT = 'img_with_comment_text'
 IMG_COMMENT_TEXT_WITH_REF = 'img_comment_text_with_ref'

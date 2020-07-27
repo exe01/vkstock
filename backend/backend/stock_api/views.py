@@ -178,6 +178,7 @@ class RenderPost(APIView):
 
         post_config[IMG_WITH_ORIGINAL_TEXT] = data.get(IMG_WITH_ORIGINAL_TEXT, 1)
         post_config[IMG_WITH_POST_IMG] = data.get(IMG_WITH_POST_IMG, 1)
+        post_config[IMG_WITH_COMMENT] = data.get(IMG_WITH_COMMENT, 1)
         post_config[IMG_COMMENT_ID] = data.get(IMG_COMMENT_ID, None)
         post_config[IMG_WITH_COMMENT_TEXT] = data.get(IMG_WITH_COMMENT_TEXT, 1)
         post_config[IMG_COMMENT_TEXT_WITH_REF] = data.get(IMG_COMMENT_TEXT_WITH_REF, 1)
@@ -244,11 +245,11 @@ class RenderPost(APIView):
             if post_config[IMG_WITH_POST_IMG]:
                 self.image_builder.add_image(post_img)
 
-            if post_config[IMG_WITH_COMMENT_TEXT]:
+            if post_config[IMG_WITH_COMMENT] and post_config[IMG_WITH_COMMENT_TEXT]:
                 censored_comment_text = self.text_builder.censor(comment_text)
                 self.image_builder.add_text(censored_comment_text)
 
-            if post_config[IMG_COMMENT_WITH_IMG]:
+            if post_config[IMG_WITH_COMMENT] and post_config[IMG_COMMENT_WITH_IMG]:
                 self.image_builder.add_image(comment_img, width=600)
 
             # Add watermark

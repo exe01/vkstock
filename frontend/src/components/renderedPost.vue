@@ -98,6 +98,7 @@
             <v-flex xs1>
               <v-checkbox
                 v-model="selectedComments[comment.id]"
+                @change="selectComment(comment.id)"
               />
             </v-flex>
             <v-flex xs11>
@@ -214,6 +215,12 @@ export default {
 
       this.post.status = resp.data.status;
     },
+    selectComment(commentId) {
+      if (this.selectedComments[commentId]) {
+        this.selectedComments = [];
+        this.selectedComments[commentId] = true;
+      }
+    },
     formatCommentText(comment) {
       if (comment.ref_text.length > 0) {
         return `*${comment.ref_text}*\n*${comment.text}*`;
@@ -264,12 +271,18 @@ export default {
         config.img_with_post_img = 0;
       }
 
+      let commentIsSelected = false;
       // eslint-disable-next-line no-restricted-syntax
       for (const commentId in this.selectedComments) {
         if (this.selectedComments[commentId] === true) {
           config.img_comment_id = Number(commentId);
+          commentIsSelected = true;
           break;
         }
+      }
+
+      if (commentIsSelected === false) {
+        config.img_with_comment = 0;
       }
 
       const resp = await this.$axios.post('/api/1.0/render_post', config);
