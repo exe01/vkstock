@@ -7,7 +7,7 @@ import math
 class BackendPagination(PageNumberPagination):
     page_size_query_param = 'count'
     page_size = 10
-    max_page_size = 50
+    max_page_size = 100
 
     def get_paginated_response(self, data):
         return Response({
