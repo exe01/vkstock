@@ -4,3 +4,4 @@ django-filter
 pillow
 gunicorn
 django-cleanup
+requests

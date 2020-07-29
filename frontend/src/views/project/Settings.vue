@@ -13,6 +13,13 @@
             >
               Add new source
             </v-btn>
+            <v-btn
+              color="#43C1DF"
+              dark
+              @click="addSourceByURLDialog = true"
+            >
+              Add new source by url
+            </v-btn>
           </v-card-title>
           <v-card-text>
             <v-data-table
@@ -197,6 +204,47 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog
+      v-model="addSourceByURLDialog"
+      max-width="600px"
+    >
+      <v-card
+        class="px-3"
+      >
+        <v-card-title>
+          <h2>Add new source by url</h2>
+        </v-card-title>
+
+        <v-card-text>
+          <v-layout>
+            <v-flex xs12>
+              <v-text-field
+                label="Source url"
+                v-model="newSourceByURL.url"
+              />
+            </v-flex>
+          </v-layout>
+          <v-layout>
+            <v-flex xs12>
+              <v-select
+                :items="types"
+                v-model="newSourceByURL.type_id"
+
+                label="Type of source"
+                item-text="name"
+                item-value="id"
+              />
+            </v-flex>
+          </v-layout>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn flat color="#98ee99" @click="addSourceByURL()">Add</v-btn>
+          <v-btn flat color="#ff867c" @click="clearNewSourceByURL()">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -216,6 +264,11 @@ export default {
         platform_id: '',
         project_id: undefined,
       },
+      newSourceByURL: {
+        url: '',
+        type_id: undefined,
+        project_id: undefined,
+      },
 
       types: [],
       project: {},
@@ -227,6 +280,7 @@ export default {
         { text: 'Actions', sortable: false, align: 'center' },
       ],
       addSourceDialog: false,
+      addSourceByURLDialog: false,
 
       newPlatformId: '',
       editPlatformIdDialog: false,
@@ -310,11 +364,30 @@ export default {
         this.setSources();
       }
     },
-    async clearNewSource() {
+    async addSourceByURL() {
+      this.newSourceByURL.project_id = this.projectId;
+
+      const resp = await this.$axios.post('/api/1.0/sources/', this.newSourceByURL);
+
+      if (resp.status === 201) {
+        console.log('Source added');
+        this.clearNewSourceByURL();
+        this.addSourceByURLDialog = false;
+        this.setSources();
+      }
+    },
+    clearNewSource() {
       this.newSource = {
         name: '',
         type_id: undefined,
         platform_id: '',
+        project_id: undefined,
+      };
+    },
+    clearNewSourceByURL() {
+      this.newSourceByURL = {
+        url: '',
+        type_id: undefined,
         project_id: undefined,
       };
     },

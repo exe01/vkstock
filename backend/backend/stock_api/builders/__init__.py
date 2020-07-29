@@ -1,5 +1,16 @@
 from PIL import Image, ImageDraw, ImageFont
-from backend.stock_api.utils import PartialCensor
+from backend.stock_api.utils.censor import PartialCensor
+from backend.stock_api.constants import *
+from backend.stock_api.models import (
+    Post,
+    Comment,
+    RenderedPost,
+    RenderedImage,
+)
+
+from django.core.files import File
+
+import io
 import random
 import string
 import textwrap
@@ -149,7 +160,7 @@ class ImageBuilder:
         return right_img
 
 
-class TextBuilder:
+class TextFormatter:
     def format_text(self, text, ref_text='', wrapper='*'):
         text = text.capitalize()
         ref_text = ref_text.capitalize()
@@ -210,3 +221,139 @@ class TextBuilder:
 
     def censor(self, text, replace='*'):
         return PartialCensor.censor(text, repl=replace)
+
+
+class PostTypeIsNotDefined(Exception):
+    pass
+
+
+class PostCreator:
+    image_builder = ImageBuilder()
+    text_builder = TextFormatter()
+
+    def create(self, post_config):
+        """Create a new post. Take info from post config
+
+        :param post_config: Configuration for building of post
+        :return: Rendered post
+        """
+        if post_config[POST_TYPE] == POST_TYPE_ORIGINAL:
+            post = Post.objects.get(id=post_config[POST_ID])
+            original_post = post
+        elif post_config[POST_TYPE] == POST_TYPE_RENDERED:
+            post = RenderedPost.objects.get(id=post_config[POST_ID])
+            original_post = post.post_id
+        else:
+            raise PostTypeIsNotDefined()
+
+        project = original_post.source_id.project_id
+
+        if post_config[POST_TYPE] == POST_TYPE_RENDERED and post_config[REPLACE] == 1:
+            rendered_post = post
+            rendered_post.images.all().delete()
+        else:
+            rendered_post = RenderedPost(
+                post_id=original_post,
+                project_id=project,
+            )
+
+        if post_config[AS_ORIGINAL]:
+            self._create_post_as_original(rendered_post, original_post)
+            return rendered_post
+
+        # Build text for image
+        if post_config[IMG] == 1:
+            if post_config[IMG_COUNT] > 1:
+                rendered_post.save()
+                self._add_original_images(rendered_post, original_post, IMG_COUNT)
+                return rendered_post
+
+            width = post_config[IMG_WIDTH]
+
+            original_text = original_post.text
+            original_text = self.text_builder.delete_emoji(original_text)
+            comment_text, comment = self._build_comment_text(original_post, post_config)
+            comment_text = self.text_builder.delete_emoji(comment_text)
+
+            post_img = original_post.get_pillow_first_image()
+            comment_img = comment.get_pillow_image() if comment else None
+
+            if post_config[AUTO] and post_img is None and comment_img is None:
+                width = 1000
+
+            self.image_builder.reset(width=width)
+
+            if post_config[IMG_WITH_ORIGINAL_TEXT]:
+                censored_original_text = self.text_builder.censor(original_text)
+                self.image_builder.add_text(censored_original_text)
+
+            if post_config[IMG_WITH_POST_IMG]:
+                self.image_builder.add_image(post_img)
+
+            if post_config[IMG_WITH_COMMENT] and post_config[IMG_WITH_COMMENT_TEXT]:
+                censored_comment_text = self.text_builder.censor(comment_text)
+                self.image_builder.add_text(censored_comment_text)
+
+            if post_config[IMG_WITH_COMMENT] and post_config[IMG_COMMENT_WITH_IMG]:
+                self.image_builder.add_image(comment_img, width=600)
+
+            # Add watermark
+            self.image_builder.add_text(project.name, location='right', text_margin=5, points=30)
+
+            rendered_img = self.image_builder.build()
+
+            img_reader = io.BytesIO()
+            rendered_img.save(img_reader, format=rendered_img.format)
+
+            rendered_post.save()
+
+            img_of_rendered_post = RenderedImage(
+                rendered_post_id=rendered_post
+            )
+            img_of_rendered_post.image.save(
+                self.text_builder.get_random_name(format=rendered_img.format),
+                File(img_reader)
+            )
+            img_of_rendered_post.save()
+
+            return rendered_post
+        else:
+            rendered_post.save()
+            return rendered_post
+
+    def _build_comment_text(self, original_post, post_config):
+        image_text = ''
+        comment = None
+        if post_config[IMG_COMMENT_ID] is not None:
+            comment_id = post_config[IMG_COMMENT_ID]
+            comment = Comment.objects.get(id=comment_id)
+        else:
+            original_comments = original_post.comments.all().order_by('-rating')
+            if len(original_comments) > 0:
+                comment = original_comments[0]
+
+        if comment:
+            if post_config[IMG_COMMENT_TEXT_WITH_REF]:
+                image_text = self.text_builder.format_text(comment.text, comment.ref_text)
+            else:
+                image_text = self.text_builder.format_text(comment.text)
+
+        return image_text, comment
+
+    def _create_post_as_original(self, rendered_post, original_post):
+        rendered_post.text = original_post.text
+        rendered_post.images.all().delete()
+        rendered_post.save()
+
+        self._add_original_images(rendered_post, original_post)
+
+    def _add_original_images(self, rendered_post, original_post, count=-1):
+        for num, img in enumerate(original_post.images.all()):
+            if num == count:
+                break
+
+            rendered_img = RenderedImage(
+                rendered_post_id=rendered_post
+            )
+            rendered_img.image = img.image
+            rendered_img.save()

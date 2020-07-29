@@ -4,13 +4,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 import django
 django.setup()
 
-from backend.stock_api.builders import TextBuilder
+from backend.stock_api.builders import TextFormatter
 import unittest
 
 
-class TestTextBuilder(unittest.TestCase):
+class TestTextFormatter(unittest.TestCase):
     def setUp(self) -> None:
-        self.text_builder = TextBuilder()
+        self.text_builder = TextFormatter()
 
     def test_delete_emoji(self):
         text_with_emoji = 'galaxy 😱😍🤔. Omg'
