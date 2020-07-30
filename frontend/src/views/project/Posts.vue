@@ -14,7 +14,7 @@
         <v-card>
           <v-card-text>
             <v-layout>
-              <v-flex xs4>
+              <v-flex xs6>
                 <v-select
                   v-model="status"
                   :items="statuses"
@@ -64,15 +64,12 @@
       justify-start
       fill-height
     >
-      <v-flex
+      <rendered-post
         v-for="(post, index) in renderedPosts"
         :key="index"
-      >
-        <rendered-post
-          :post="post"
-          :project-name="project.name"
-        />
-      </v-flex>
+        :post="post"
+        :project-name="project.name"
+      />
     </v-layout>
 
     <!-- Bottom pagination -->

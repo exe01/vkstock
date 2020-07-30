@@ -38,7 +38,10 @@
     <!-- Tab content -->
     <v-layout>
       <v-flex>
-        <v-tabs-items v-model="tabIndex">
+        <v-tabs-items
+          v-model="tabIndex"
+          touchless
+        >
           <v-tab-item>
             <posts
               :project-id="projectId"

@@ -2,9 +2,13 @@
 /* eslint-disable vue/max-attributes-per-line */
 /* eslint-disable vue/singleline-html-element-content-newline */
 <template>
-  <div>
+  <v-flex style="width: 500px">
     <v-card
-      width="500px"
+      max-width="500px"
+      md12
+      xs12
+      lg12
+      xl12
     >
       <v-card-title>
         <div>
@@ -130,7 +134,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-flex>
 </template>
 
 <script>
