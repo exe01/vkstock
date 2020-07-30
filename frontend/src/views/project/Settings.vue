@@ -67,7 +67,7 @@
               Edit token
             </v-btn>
           </v-card-title>
-          <v-card-text>
+          <v-card-text class="text-hidden">
             {{ project.token }}
           </v-card-text>
         </v-card>
@@ -75,7 +75,7 @@
     </v-layout>
 
     <v-layout class="mt-4">
-      <v-flex xs6>
+      <v-flex>
         <v-card>
           <v-card-title>
             <h2>Platform Id</h2>
@@ -425,3 +425,10 @@ export default {
   },
 };
 </script>
+
+<style scope>
+.text-hidden {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
