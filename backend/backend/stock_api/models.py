@@ -64,6 +64,7 @@ class Comment(models.Model):
 
         return pil_image
 
+
 class RenderedPost(models.Model):
     STATUS_CHOICES = [
         ('AC', 'accepted'),
