@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -101,4 +102,14 @@ func PrettyJson(msg []byte) string {
 	}
 
 	return prettyJSON.String()
+}
+
+func ParseUsernameAndPassFromToken(token string) (string, string, error) {
+	usernameAndPass := strings.Split(token, "|")
+	if len(usernameAndPass) != 2 {
+		errorMsg := fmt.Sprintf("incorrect token, count of elements %d", len(usernameAndPass))
+		return "", "", errors.New(errorMsg)
+	}
+
+	return usernameAndPass[0], usernameAndPass[1], nil
 }
