@@ -99,7 +99,7 @@ type RenderedPost struct {
 	Text       string          `json:"text"`
 	Images     []RenderedImage `json:"images"`
 	Status     string          `json:"status"`
-	Rating     int             `json:"rating"`
+	Rating     float32         `json:"rating"`
 }
 
 type RenderedImage struct {
