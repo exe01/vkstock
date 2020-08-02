@@ -21,6 +21,7 @@ class Source(models.Model):
     platform_id = models.CharField(max_length=256)
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE)
     type_id = models.ForeignKey(Type, on_delete=models.CASCADE)
+    members = models.IntegerField(default=0)
 
 
 class Post(models.Model):
@@ -28,7 +29,7 @@ class Post(models.Model):
     platform_id = models.CharField(max_length=256)
     source_id = models.ForeignKey(Source, null=True, on_delete=models.SET_NULL)
     text = models.TextField(blank=True)
-    rating = models.IntegerField(default=0)
+    likes = models.IntegerField(default=0)
 
     def get_pillow_first_image(self):
         pil_image = None
@@ -51,7 +52,7 @@ class Comment(models.Model):
     text = models.TextField(default='', blank=True)
     ref_text = models.TextField(default='', blank=True)
     post_id = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
-    rating = models.IntegerField(default=0)
+    likes = models.IntegerField(default=0)
     image = models.ImageField(upload_to='comment_images', null=True)
 
     def get_pillow_image(self):
@@ -78,6 +79,7 @@ class RenderedPost(models.Model):
     platform_id = models.CharField(max_length=256)
     posted_date = models.IntegerField(default=0)
     text = models.TextField(blank=True)
+    likes = models.IntegerField(default=0)
     status = models.CharField(
         max_length=2,
         choices=STATUS_CHOICES,
