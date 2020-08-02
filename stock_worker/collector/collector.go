@@ -340,7 +340,7 @@ func convertVKPost(vkPost VKPost) models.Post {
 		Text:       vkPost.Text,
 		Images:     nil,
 		Comments:   nil,
-		Rating:     vkPost.Likes.Count,
+		Likes:      vkPost.Likes.Count,
 	}
 
 	return post
@@ -408,7 +408,7 @@ func convertVKComment(vkComment VKComment) models.Comment {
 		Username: strconv.Itoa(vkComment.FromId),
 		Text:     vkComment.Text,
 		PostId:   0,
-		Rating:   vkComment.Likes.Count,
+		Likes:   vkComment.Likes.Count,
 	}
 
 	return comment

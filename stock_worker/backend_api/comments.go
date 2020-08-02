@@ -16,7 +16,7 @@ func (api *StockAPI) saveComment(comment models.Comment) (models.Comment, error)
 		Text:     comment.Text,
 		PostId:   comment.PostId,
 		RefText:  comment.RefText,
-		Rating:   comment.Rating,
+		Likes:    comment.Likes,
 	}
 
 	resp, err := api.SaveModel("comments", commentWithoutImage)

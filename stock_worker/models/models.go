@@ -51,6 +51,7 @@ type Source struct {
 	PlatformId string `json:"platform_id"`
 	ProjectId  int    `json:"project_id"`
 	TypeId     int    `json:"type_id"`
+	Members    int    `json:"members"`
 }
 
 type Post struct {
@@ -61,7 +62,7 @@ type Post struct {
 	Images     []PostImage `json:"images"`
 	Comments   []Comment   `json:"comments"`
 	Date       int64       `json:"date"`
-	Rating	   int		   `json:"rating"`
+	Likes      int         `json:"likes"`
 }
 
 type PostImage struct {
@@ -76,7 +77,7 @@ type Comment struct {
 	Text     string `json:"text"`
 	PostId   int    `json:"post_id"`
 	RefText  string `json:"ref_text"`
-	Rating	 int    `json:"rating"`
+	Likes	 int    `json:"likes"`
 	Image 	 string `json:"image"`
 }
 
@@ -86,7 +87,7 @@ type CommentWithoutImage struct {
 	Text     string `json:"text"`
 	PostId   int    `json:"post_id"`
 	RefText  string `json:"ref_text"`
-	Rating	 int    `json:"rating"`
+	Likes    int    `json:"likes"`
 }
 
 type RenderedPost struct {
@@ -98,6 +99,7 @@ type RenderedPost struct {
 	Text       string          `json:"text"`
 	Images     []RenderedImage `json:"images"`
 	Status     string          `json:"status"`
+	Rating     int             `json:"rating"`
 }
 
 type RenderedImage struct {
