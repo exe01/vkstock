@@ -1,6 +1,7 @@
 FROM golang:alpine AS builder
 
-ENV CGO_ENABLED=0 \
+ENV GO111MODULE=off \
+    CGO_ENABLED=0 \
     GOOS=linux
 
 RUN apk --no-cache add ca-certificates
