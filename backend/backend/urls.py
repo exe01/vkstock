@@ -40,6 +40,7 @@ router.register(r'rendered_images', api_views.RenderedImageViewSet)
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/1.0/render_post', api_views.RenderPost.as_view()),
+    path('api/1.0/update_source_members', api_views.Members.as_view()),
     path('api/1.0/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

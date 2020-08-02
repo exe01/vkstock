@@ -31,6 +31,8 @@ from backend.stock_api.builders import PostCreator
 from backend.stock_api.utils.vk_resolver import VKResolver, IdentificatorNotFound, VKRequestError
 from rest_framework import status
 
+import time
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """API endpoint that allows users to be viewed or edited.
@@ -80,7 +82,8 @@ class SourceViewSet(viewsets.ModelViewSet):
                         'name': public_page['name'],
                         'platform_id': public_page['id'],
                         'project_id': json_data['project_id'],
-                        'type_id': type_id
+                        'type_id': type_id,
+                        'members': public_page.get('members_count', 0),
                     }
 
                     serializer = self.get_serializer(data=source_data)
@@ -98,7 +101,7 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-id')
     serializer_class = PostSerializer
     filterset_fields = ['source_id']
-    ordering_fields = ['date', 'rating']
+    ordering_fields = ['date', 'likes']
     filter_backends = [DjangoFilterBackend, OrderingFilter]
 
 
@@ -141,9 +144,24 @@ class RenderPost(APIView):
 
             serializer = RenderedPostSerializer(rendered_post)
             response = Response(serializer.data)
+            return response
         except NullPostId:
             response = Response({
                 'exception': 'Id of post is null'
             }, 400)
 
-        return response
+
+class Members(APIView):
+    """
+    Update count of members of sources
+    """
+    def post(self, request):
+        for source in Source.objects.all():
+            source_type = source.type_id
+            if source_type.name == 'vk_group':
+                public_page = VKResolver.get_public_page_info(source.platform_id, source_type.token)
+                source.members = public_page.get('members_count', 0)
+                source.save()
+                time.sleep(1)
+
+        return Response(status=200)

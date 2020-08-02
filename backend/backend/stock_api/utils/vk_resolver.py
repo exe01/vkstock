@@ -11,22 +11,41 @@ class VKRequestError(Exception):
 
 
 class VKResolver:
-    @staticmethod
-    def get_public_page_info_by_url(vk_url, token, v='5.52'):
-        """
+    GROUP_FIELDS = (
+        'members_count',
+    )
 
+    @staticmethod
+    def get_public_page_info_by_url(vk_url, *args, **kwargs):
+        """
         :param vk_url: url address of public page
         :param token: service/user token
         :param v: version of vk api
+        :param fields: additional field that will return
         :return: public page model
         """
         identificator = VKResolver.get_identificator_from_url(vk_url)
+        return VKResolver.get_public_page_info(identificator, *args, **kwargs)
+
+    @staticmethod
+    def get_public_page_info(group_id, token, v='5.52', fields=None):
+        """
+        :param group_id: identificator of public page
+        :param token: service/user token
+        :param v: version of vk api
+        :param fields: additional field that will return
+        :return: public page model
+        """
+        additional_fields = VKResolver.GROUP_FIELDS
+        if fields is not None:
+            additional_fields = additional_fields + tuple(fields)
 
         resp = requests.get('https://api.vk.com/method/groups.getById',
                             params={
-                                'group_id': identificator,
+                                'fields': additional_fields,
+                                'group_id': group_id,
                                 'access_token': token,
-                                'v': v
+                                'v': v,
                             })
 
         json_resp = resp.json()

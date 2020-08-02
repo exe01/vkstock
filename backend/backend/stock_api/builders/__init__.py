@@ -305,6 +305,7 @@ class PostCreator:
             img_reader = io.BytesIO()
             rendered_img.save(img_reader, format=rendered_img.format)
 
+            rendered_post.rating = self._calculate_rating(original_post, comment)
             rendered_post.save()
 
             img_of_rendered_post = RenderedImage(
@@ -321,6 +322,25 @@ class PostCreator:
             rendered_post.save()
             return rendered_post
 
+    def _calculate_rating(self, original_post, comment):
+        comment_likes = 0
+        if comment:
+            comment_likes = comment.likes
+
+        post_likes = 0
+        if original_post:
+            post_likes = original_post.likes
+
+        count_of_source_members = 0
+        if original_post and original_post.source_id:
+            count_of_source_members = original_post.source_id.members
+
+        if count_of_source_members == 0:
+            return 0
+
+        rating = (post_likes + comment_likes) / count_of_source_members
+        return rating
+
     def _build_comment_text(self, original_post, post_config):
         image_text = ''
         comment = None
@@ -328,7 +348,7 @@ class PostCreator:
             comment_id = post_config[IMG_COMMENT_ID]
             comment = Comment.objects.get(id=comment_id)
         else:
-            original_comments = original_post.comments.all().order_by('-rating')
+            original_comments = original_post.comments.all().order_by('-likes')
             if len(original_comments) > 0:
                 comment = original_comments[0]
 

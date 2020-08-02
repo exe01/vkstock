@@ -79,7 +79,7 @@ class RenderedPost(models.Model):
     platform_id = models.CharField(max_length=256)
     posted_date = models.IntegerField(default=0)
     text = models.TextField(blank=True)
-    likes = models.IntegerField(default=0)
+    rating = models.FloatField(default=0)
     status = models.CharField(
         max_length=2,
         choices=STATUS_CHOICES,
