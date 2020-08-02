@@ -13,6 +13,8 @@ WORKDIR /usr/local/go/src/vkstock/stock_worker
 #COPY go.sum .
 #RUN go mod download
 
+RUN go get -u -v gopkg.in/ahmdrz/goinsta.v2
+
 # Copy the code into the container
 COPY . .
 
