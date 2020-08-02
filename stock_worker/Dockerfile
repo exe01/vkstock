@@ -5,6 +5,7 @@ ENV GO111MODULE=off \
     GOOS=linux
 
 RUN apk --no-cache add ca-certificates
+RUN apk add git
 
 WORKDIR /usr/local/go/src/vkstock/stock_worker
 
