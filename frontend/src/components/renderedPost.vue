@@ -11,10 +11,29 @@
       xl12
     >
       <v-card-title>
-        <div>
-          <p class="headline">{{ projectName }}</p>
-          <p class="mb-0">{{ post.text }}</p>
-        </div>
+        <v-layout>
+          <v-flex align-self-center>
+            <p class="headline ma-0">{{ projectName }}</p>
+          </v-flex>
+          <v-spacer />
+          <v-flex align-self-center>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <p
+                  class="text-xs-right ma-0"
+                  v-on="on"
+                >
+                  {{ post.rating | ratingFilter }}
+                </p>
+              </template>
+              <span>
+                (<var>post_likes</var> + <var>comment_likes</var>) * 1000 / <var>count_of_members</var>
+              </span>
+            </v-tooltip>
+          </v-flex>
+        </v-layout>
+
+        <p class="mb-0">{{ post.text }}</p>
       </v-card-title>
 
       <post-images
@@ -43,10 +62,27 @@
         class="px-3"
       >
         <v-card-title>
-          <div>
-            <p class="headline">{{ projectName }}</p>
-            <p class="mb-0">{{ post.text }}</p>
-          </div>
+          <v-layout>
+            <v-flex align-self-center>
+              <p class="headline ma-0">{{ projectName }}</p>
+            </v-flex>
+            <v-spacer />
+            <v-flex align-self-center>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on }">
+                  <p
+                    class="text-xs-right ma-0"
+                    v-on="on"
+                  >
+                    {{ post.rating | ratingFilter }}
+                  </p>
+                </template>
+                <span>Tooltip</span>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
+
+          <p class="mb-0">{{ post.text }}</p>
         </v-card-title>
 
         <v-img
@@ -165,6 +201,11 @@ export default {
       selectedOriginalText: true,
       selectedOriginalImage: true,
     };
+  },
+  filters: {
+    ratingFilter(number) {
+      return number.toFixed(3);
+    }
   },
   methods: {
     async openSettingDialog() {
