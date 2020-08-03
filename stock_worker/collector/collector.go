@@ -120,6 +120,8 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 		time.Sleep(time.Second)
 		vkPosts, err = c.getVKPosts(ownerId, count, offset)
 
+		log.Printf("Returned %d posts from %s", len(vkPosts), ownerId)
+
 		if len(vkPosts) == 0 {
 			return posts, nil
 		}

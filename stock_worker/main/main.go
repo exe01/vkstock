@@ -287,6 +287,7 @@ func getNewPosts(stockAPI *backend_api.StockAPI) []models.Post {
 					log.Printf("Error while got posts %s", source.Name)
 					log.Print(err)
 				}
+				log.Printf("Returned %d new posts from %s", len(newSourcePosts), source.Name)
 			}
 		}
 
