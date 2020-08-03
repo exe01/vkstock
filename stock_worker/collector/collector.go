@@ -131,6 +131,10 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 		}
 
 		for _, vkPost := range vkPosts {
+			if vkPost.MarkedAsAds != 0 || vkPost.IsPinned == 1 {
+				continue
+			}
+
 			if vkPostIsOld(vkPost) {
 				gettingPosts = false
 				break
@@ -139,10 +143,6 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 			if vkPost.Id <= lastRecordId {
 				gettingPosts = false
 				break
-			}
-
-			if vkPost.MarkedAsAds != 0 || vkPost.IsPinned == 1 {
-				continue
 			}
 
 			if vkPostIsNew(vkPost) {
