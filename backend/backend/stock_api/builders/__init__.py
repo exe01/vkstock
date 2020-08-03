@@ -338,7 +338,7 @@ class PostCreator:
         if count_of_source_members == 0:
             return 0
 
-        rating = (post_likes + comment_likes) / count_of_source_members
+        rating = (post_likes + comment_likes) * 1000 / count_of_source_members
         return rating
 
     def _build_comment_text(self, original_post, post_config):

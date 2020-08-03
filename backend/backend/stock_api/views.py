@@ -32,6 +32,7 @@ from backend.stock_api.utils.vk_resolver import VKResolver, IdentificatorNotFoun
 from rest_framework import status
 
 import time
+import threading
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -156,12 +157,14 @@ class Members(APIView):
     Update count of members of sources
     """
     def post(self, request):
-        for source in Source.objects.all():
-            source_type = source.type_id
-            if source_type.name == 'vk_group':
-                public_page = VKResolver.get_public_page_info(source.platform_id, source_type.token)
-                source.members = public_page.get('members_count', 0)
-                source.save()
-                time.sleep(1)
+        def update_members():
+            for source in Source.objects.all():
+                source_type = source.type_id
+                if source_type.name == 'vk_group':
+                    public_page = VKResolver.get_public_page_info(source.platform_id, source_type.token)
+                    source.members = public_page.get('members_count', 0)
+                    source.save()
+                    time.sleep(1)
 
+        threading.Thread(target=update_members).start()
         return Response(status=200)
