@@ -151,10 +151,11 @@ func (c *VKCollector) GetPosts(ownerId string, lastRecordId int) ([]models.Post,
 
 			topVKComments, err := c.getTopVKComments(ownerId, vkPost.Id, countOfComments)
 			if err != nil {
-				continue
+				log.Printf("Error while got top vk comments")
+				log.Print(err)
 			}
 
-			comments := make([]models.Comment, 0, countOfComments)
+			comments := make([]models.Comment, 0, len(topVKComments))
 			for _, vkComment := range topVKComments {
 				comment := convertVKComment(vkComment)
 
