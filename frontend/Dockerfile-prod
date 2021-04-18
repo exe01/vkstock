@@ -1,0 +1,20 @@
+# Stage 0, "build-stage", build and compile the frontend
+FROM node:12.8.1-stretch as build-stage
+
+WORKDIR /app
+
+RUN npm install -g @vue/cli@3.10.0
+
+# Install the application's dependencies into the node_modules's cache directory.
+COPY ./package.json ./
+RUN npm install
+
+#WORKDIR /app
+COPY ./ /app
+
+RUN npm run build
+
+# Stage 2, based on Nginx, to have only the compiled app, ready for production with Nginx
+FROM nginx:1.16.1
+
+COPY --from=build-stage /app/dist /usr/share/nginx/dist
